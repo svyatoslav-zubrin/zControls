@@ -14,6 +14,8 @@
 		8D4212341A641DFD00E9AC88 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D4212321A641DFD00E9AC88 /* LaunchScreen.xib */; };
 		8D4212401A641DFD00E9AC88 /* SZTableViewDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D42123F1A641DFD00E9AC88 /* SZTableViewDemoTests.swift */; };
 		8D42124B1A6421B700E9AC88 /* SZTableViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D42124A1A6421B700E9AC88 /* SZTableViewLayout.swift */; };
+		8DD3B94A1A653CB800068B61 /* SZIndexPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD3B9491A653CB800068B61 /* SZIndexPath.swift */; };
+		8DD3B94C1A65463900068B61 /* SZTableViewLayoutAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD3B94B1A65463900068B61 /* SZTableViewLayoutAttributes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +40,8 @@
 		8D42123E1A641DFD00E9AC88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D42123F1A641DFD00E9AC88 /* SZTableViewDemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SZTableViewDemoTests.swift; sourceTree = "<group>"; };
 		8D42124A1A6421B700E9AC88 /* SZTableViewLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SZTableViewLayout.swift; path = TableView/SZTableViewLayout.swift; sourceTree = "<group>"; };
+		8DD3B9491A653CB800068B61 /* SZIndexPath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SZIndexPath.swift; path = TableView/SZIndexPath.swift; sourceTree = "<group>"; };
+		8DD3B94B1A65463900068B61 /* SZTableViewLayoutAttributes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SZTableViewLayoutAttributes.swift; path = TableView/SZTableViewLayoutAttributes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +123,8 @@
 			isa = PBXGroup;
 			children = (
 				8D42124A1A6421B700E9AC88 /* SZTableViewLayout.swift */,
+				8DD3B9491A653CB800068B61 /* SZIndexPath.swift */,
+				8DD3B94B1A65463900068B61 /* SZTableViewLayoutAttributes.swift */,
 			);
 			name = TableView;
 			sourceTree = "<group>";
@@ -224,7 +230,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D42122C1A641DFD00E9AC88 /* ViewController.swift in Sources */,
+				8DD3B94C1A65463900068B61 /* SZTableViewLayoutAttributes.swift in Sources */,
 				8D42122A1A641DFD00E9AC88 /* AppDelegate.swift in Sources */,
+				8DD3B94A1A653CB800068B61 /* SZIndexPath.swift in Sources */,
 				8D42124B1A6421B700E9AC88 /* SZTableViewLayout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -417,6 +425,7 @@
 				8D4212451A641DFD00E9AC88 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		8D4212461A641DFD00E9AC88 /* Build configuration list for PBXNativeTarget "SZTableViewDemoTests" */ = {
 			isa = XCConfigurationList;
@@ -425,6 +434,7 @@
 				8D4212481A641DFD00E9AC88 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
