@@ -10,38 +10,21 @@ import UIKit
 
 class SZIndexPath: NSObject {
    
-    private(set) var rawSectionIndex: Int = 0
+    private(set) var rowSectionIndex: Int = 0
     private(set) var columnSectionIndex: Int = 0
-    private(set) var rawIndex: Int = 0
+    private(set) var rowIndex: Int = 0
     private(set) var columnIndex: Int = 0
     
-    convenience init(rawSectionIndex    _rawSectionIndex    : Int,
+    convenience init(rowSectionIndex    _rowSectionIndex    : Int,
                      columnSectionIndex _columnSectionIndex : Int,
-                     rawIndex           _rawIndex           : Int,
+                     rowIndex           _rowIndex           : Int,
                      columnIndex        _columnIndex        : Int)
     {
         self.init()
 
-        rawSectionIndex = _rawSectionIndex
+        rowSectionIndex = _rowSectionIndex
         columnSectionIndex = _columnSectionIndex
-        rawIndex = _rawIndex
+        rowIndex = _rowIndex
         columnIndex = _columnIndex
-    }
-    
-    func nsIndexPath() -> NSIndexPath {
-        // TODO: correct implementation
-        return NSIndexPath()
-    }
-}
-
-extension NSIndexPath {
-    func szIndexPath() -> SZIndexPath {
-        // TODO: correct implementation needed
-        return SZIndexPath()
-    }
-    
-    func szReusableViewKind() -> SZReusableViewKind {
-        // TODO: correct implementation needed
-        return SZReusableViewKind.Cell
     }
 }

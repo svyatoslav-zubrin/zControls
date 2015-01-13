@@ -11,9 +11,9 @@ import UIKit
 enum SZReusableViewKind {
     case Cell
     case ColumnHeader
-    case RawHeader
+    case RowHeader
     case ColumnsSectionHeader
-    case RawsSectionHeader
+    case RowsSectionHeader
 }
 
 // MARK: - SZTableViewDataSource protocol
@@ -21,13 +21,13 @@ enum SZReusableViewKind {
 protocol SZTableViewDataSource {
     
     func numberOfColumnsSectionsInTableView(_tableView: UICollectionView) -> Int
-    func numberOfRawsSectionsInTableView(tableView: UICollectionView) -> Int
+    func numberOfRowsSectionsInTableView(tableView: UICollectionView) -> Int
     func numberOfColumnsInSection(_sectionIndex: Int, ofTableView tableView: UICollectionView) -> Int
     func numberOfRowsInSection(_sectionIndex: Int, ofTableView tableView: UICollectionView) -> Int
     
     // geometry
     func widthOfColumn(atIndexPath indexPath: SZIndexPath, ofTableView tableView: UICollectionView) -> Float
-    func hightOfRaw(atIndexPath indexPath: SZIndexPath, ofTableView tableView: UICollectionView) -> Float
+    func hightOfRow(atIndexPath indexPath: SZIndexPath, ofTableView tableView: UICollectionView) -> Float
 
     // view for cells
     func dequeCell(atIndexPath indexPath: SZIndexPath, withReuseIdentifier reuseID: String, forTableView tableView: UICollectionView) -> UICollectionViewCell
@@ -40,8 +40,8 @@ protocol SZTableViewDataSource {
 
 protocol SZTableViewDelegate {
     
-    func tableView(_tableView: UICollectionView, didSelectCellAtIndexPath   indexPath: NSIndexPath)
-    func tableView(_tableView: UICollectionView, didSelectHeaderAtIndexPath indexPath: NSIndexPath)
+    func tableView(_tableView: UICollectionView, didSelectCellAtIndexPath   indexPath: SZIndexPath)
+    func tableView(_tableView: UICollectionView, didSelectHeaderAtIndexPath indexPath: SZIndexPath)
 }
 
 // MARK: - SZTableViewLayout
@@ -53,10 +53,10 @@ class SZTableViewLayout: UICollectionViewLayout {
     // MARK: ...implement NSIndexPath<->SZIndexPath conversion logic
     // MARK: ...implement NSIndexPath->SZReusableViewKind conversion logic
     // MARK: ...implement cache for global paramenters and layout attributes
-    // MARK: ...implement expandable raws and columns
-    // MARK: ...implement sorting of all the table with tap on the column/raw/section header
-    // MARK: ...implement possibility to fix the posiiton of column/raw/section
-    // MARK: ...implement filtering of the table over column/raw/section content
+    // MARK: ...implement expandable Raws and columns
+    // MARK: ...implement sorting of all the table with tap on the column/Raw/section header
+    // MARK: ...implement possibility to fix the posiiton of column/Raw/section
+    // MARK: ...implement filtering of the table over column/Raw/section content
     // MARK: ...implement inline editing of the cell content
     // MARK: -
     
@@ -83,23 +83,23 @@ class SZTableViewLayout: UICollectionViewLayout {
     override func prepareLayout() {
         var newLayoutInfo = LayoutInfo()
         
-        let rawSectionsCount = dataSource.numberOfRawsSectionsInTableView(self.collectionView!)
+        let rowSectionsCount = dataSource.numberOfRowsSectionsInTableView(self.collectionView!)
         let columnSectionsCount = dataSource.numberOfColumnsSectionsInTableView(self.collectionView!)
-        let tableHasContent = columnSectionsCount > 0 && rawSectionsCount > 0
+        let tableHasContent = columnSectionsCount > 0 && rowSectionsCount > 0
 
         if tableHasContent {
             var cellsLayoutAttributes = LayoutAttributes()
             // cells
-            for rawSectionIndex in 0..<rawSectionsCount {
+            for rowSectionIndex in 0..<rowSectionsCount {
                 for columnSectionIndex in 0..<columnSectionsCount {
-                    let rawsCount = dataSource.numberOfRowsInSection(rawSectionIndex, ofTableView: self.collectionView!)
+                    let rowsCount = dataSource.numberOfRowsInSection(rowSectionIndex, ofTableView: self.collectionView!)
                     let columnsCount = dataSource.numberOfColumnsInSection(columnSectionIndex, ofTableView: self.collectionView!)
-                    let sectionHasContent = columnsCount > 0 && rawsCount > 0
+                    let sectionHasContent = columnsCount > 0 && rowsCount > 0
                     
                     if sectionHasContent {
-                        for rawIndex in 0..<rawsCount {
+                        for rowIndex in 0..<rowsCount {
                             for columnIndex in 0..<columnsCount {
-                                let indexPath = SZIndexPath(rawSectionIndex: rawSectionIndex, columnSectionIndex: columnSectionIndex, rawIndex: rawIndex, columnIndex: columnIndex)
+                                let indexPath = SZIndexPath(rowSectionIndex: rowSectionIndex, columnSectionIndex: columnSectionIndex, rowIndex: rowIndex, columnIndex: columnIndex)
                                 let cellAttributes = SZTableViewLayoutAttributes(forCellWithIndexPath: indexPath)
                                 cellAttributes.frame = frameForCellAtIndexPath(indexPath)
                                 cellsLayoutAttributes[indexPath] = cellAttributes
@@ -109,23 +109,23 @@ class SZTableViewLayout: UICollectionViewLayout {
                 }
             }
             
-            // raws headers
-            var rawSectionsHeadersLayoutAttributes = LayoutAttributes()
-            var rawsHeadersLayoutAttributes = LayoutAttributes()
-            for rawSectionIndex in 0..<rawSectionsCount {
+            // rows headers
+            var rowSectionsHeadersLayoutAttributes = LayoutAttributes()
+            var rowsHeadersLayoutAttributes = LayoutAttributes()
+            for rowSectionIndex in 0..<rowSectionsCount {
                 // sections header
-                let indexPath = SZIndexPath(rawSectionIndex: rawSectionIndex, columnSectionIndex: 0, rawIndex: 0, columnIndex: 0)
-                let headerAttributes = SZTableViewLayoutAttributes(forHeaderOfKind: SZReusableViewKind.RawsSectionHeader, atIndexPath: indexPath)
-                headerAttributes.frame = frameForHeaderOfKind(SZReusableViewKind.RawsSectionHeader, atIndexPath: indexPath)
-                rawSectionsHeadersLayoutAttributes[indexPath] = headerAttributes
+                let indexPath = SZIndexPath(rowSectionIndex: rowSectionIndex, columnSectionIndex: 0, rowIndex: 0, columnIndex: 0)
+                let headerAttributes = SZTableViewLayoutAttributes(forHeaderOfKind: SZReusableViewKind.RowsSectionHeader, atIndexPath: indexPath)
+                headerAttributes.frame = frameForHeaderOfKind(SZReusableViewKind.RowsSectionHeader, atIndexPath: indexPath)
+                rowSectionsHeadersLayoutAttributes[indexPath] = headerAttributes
                 // rows headers
-                let rawsCount = dataSource.numberOfRowsInSection(rawSectionIndex, ofTableView: self.collectionView!)
-                if rawsCount > 0 {
-                    for rawIndex in 0..<rawsCount {
-                        let indexPath = SZIndexPath(rawSectionIndex: rawSectionIndex, columnSectionIndex: 0, rawIndex: rawIndex, columnIndex: 0)
-                        let headerAttributes = SZTableViewLayoutAttributes(forHeaderOfKind: SZReusableViewKind.RawHeader, atIndexPath: indexPath)
-                        headerAttributes.frame = frameForHeaderOfKind(SZReusableViewKind.RawHeader, atIndexPath: indexPath)
-                        rawsHeadersLayoutAttributes[indexPath] = headerAttributes
+                let rowsCount = dataSource.numberOfRowsInSection(rowSectionIndex, ofTableView: self.collectionView!)
+                if rowsCount > 0 {
+                    for rowIndex in 0..<rowsCount {
+                        let indexPath = SZIndexPath(rowSectionIndex: rowSectionIndex, columnSectionIndex: 0, rowIndex: rowIndex, columnIndex: 0)
+                        let headerAttributes = SZTableViewLayoutAttributes(forHeaderOfKind: SZReusableViewKind.RowHeader, atIndexPath: indexPath)
+                        headerAttributes.frame = frameForHeaderOfKind(SZReusableViewKind.RowHeader, atIndexPath: indexPath)
+                        rowsHeadersLayoutAttributes[indexPath] = headerAttributes
                     }
                 }
             }
@@ -135,7 +135,7 @@ class SZTableViewLayout: UICollectionViewLayout {
             var columnsHeadersLayoutAttributes = LayoutAttributes()
             for columnSectionIndex in 0..<columnSectionsCount {
                 // sections header
-                let indexPath = SZIndexPath(rawSectionIndex: 0, columnSectionIndex: columnSectionIndex, rawIndex: 0, columnIndex: 0)
+                let indexPath = SZIndexPath(rowSectionIndex: 0, columnSectionIndex: columnSectionIndex, rowIndex: 0, columnIndex: 0)
                 let headerAttributes = SZTableViewLayoutAttributes(forHeaderOfKind: SZReusableViewKind.ColumnsSectionHeader, atIndexPath: indexPath)
                 headerAttributes.frame = frameForHeaderOfKind(SZReusableViewKind.ColumnsSectionHeader, atIndexPath: indexPath)
                 columnSectionsHeadersLayoutAttributes[indexPath] = headerAttributes
@@ -144,7 +144,7 @@ class SZTableViewLayout: UICollectionViewLayout {
                 let columnsCount = dataSource.numberOfColumnsInSection(columnSectionIndex, ofTableView: self.collectionView!)
                 if columnsCount > 0 {
                     for columnIndex in 0..<columnsCount {
-                        let indexPath = SZIndexPath(rawSectionIndex: 0, columnSectionIndex: columnSectionIndex, rawIndex: 0, columnIndex: columnIndex)
+                        let indexPath = SZIndexPath(rowSectionIndex: 0, columnSectionIndex: columnSectionIndex, rowIndex: 0, columnIndex: columnIndex)
                         let headerAttributes = SZTableViewLayoutAttributes(forHeaderOfKind: SZReusableViewKind.ColumnHeader, atIndexPath: indexPath)
                         headerAttributes.frame = frameForHeaderOfKind(SZReusableViewKind.ColumnHeader, atIndexPath: indexPath)
                         columnsHeadersLayoutAttributes[indexPath] = headerAttributes
@@ -153,9 +153,9 @@ class SZTableViewLayout: UICollectionViewLayout {
             }
             
             newLayoutInfo[SZReusableViewKind.Cell]                  = cellsLayoutAttributes
-            newLayoutInfo[SZReusableViewKind.RawsSectionHeader]     = rawSectionsHeadersLayoutAttributes
+            newLayoutInfo[SZReusableViewKind.RowsSectionHeader]     = rowSectionsHeadersLayoutAttributes
             newLayoutInfo[SZReusableViewKind.ColumnsSectionHeader]  = columnSectionsHeadersLayoutAttributes
-            newLayoutInfo[SZReusableViewKind.RawHeader]             = rawsHeadersLayoutAttributes
+            newLayoutInfo[SZReusableViewKind.RowHeader]             = rowsHeadersLayoutAttributes
             newLayoutInfo[SZReusableViewKind.ColumnHeader]          = columnsHeadersLayoutAttributes
         }
         
@@ -191,21 +191,22 @@ class SZTableViewLayout: UICollectionViewLayout {
     override func layoutAttributesForItemAtIndexPath(indexPath: NSIndexPath) -> UICollectionViewLayoutAttributes! {
         var result: UICollectionViewLayoutAttributes? = nil
         if let layoutAttributes = layoutInfo[SZReusableViewKind.Cell] as LayoutAttributes? {
-            result = layoutAttributes[indexPath.szIndexPath()]
+            result = layoutAttributes[szIndexPath(fromStandardIndexPath: indexPath)]
         }
         return result
     }
     
     override func layoutAttributesForSupplementaryViewOfKind(elementKind: String, atIndexPath indexPath: NSIndexPath) -> UICollectionViewLayoutAttributes! {
         var result: UICollectionViewLayoutAttributes? = nil
-        if let layoutAttributes = layoutInfo[indexPath.szReusableViewKind()] as LayoutAttributes? {
-            result = layoutAttributes[indexPath.szIndexPath()]
+        if let layoutAttributes = layoutInfo[szReusableViewKind(fromStandardIndexPath: indexPath)] as LayoutAttributes? {
+            result = layoutAttributes[szIndexPath(fromStandardIndexPath: indexPath)]
         }
         return result
     }
 }
 
-// MARK: - Private
+// MARK: - Private -
+// MARK: Frames calculation
 
 private extension SZTableViewLayout {
     
@@ -219,3 +220,39 @@ private extension SZTableViewLayout {
         return CGRect.zeroRect
     }
 }
+
+// MARK: Index paths conversions
+
+private extension SZTableViewLayout {
+    
+    func szIndexPath(fromStandardIndexPath nsIndexPath: NSIndexPath) -> SZIndexPath {
+        return SZIndexPath()
+    }
+    
+    func nsIndexPath(fromInternalIndexPath szIndexPath: SZIndexPath) -> NSIndexPath {
+        
+        // columns
+        var totalColumnsNumber: Int = 0
+        let columnSectionsNumber = dataSource.numberOfColumnsSectionsInTableView(self.collectionView!)
+        for columnSectionIndex in 0..<columnSectionsNumber {
+            totalColumnsNumber += dataSource.numberOfColumnsInSection(columnSectionIndex, ofTableView: self.collectionView!)
+        }
+        
+        var totalRowsNumber: Int = 0
+        let rowSectionsNumber = dataSource.numberOfColumnsSectionsInTableView(self.collectionView!)
+        for rowSectionIndex in 0..<rowSectionsNumber {
+            totalRowsNumber += dataSource.numberOfRowsInSection(rowSectionIndex, ofTableView: self.collectionView!)
+        }
+
+        let totalCellsNumber = totalColumnsNumber * totalRowsNumber
+        
+        // TODO: continue here
+        
+        return NSIndexPath()
+    }
+    
+    func szReusableViewKind(fromStandardIndexPath nsIndexPath: NSIndexPath) -> SZReusableViewKind {
+        return SZReusableViewKind.Cell
+    }
+}
+
