@@ -28,3 +28,39 @@ class SZIndexPath: NSObject {
         columnIndex = _columnIndex
     }
 }
+
+// MARK: Index paths conversions
+
+extension SZIndexPath {
+
+    class func szIndexPath(fromStandardIndexPath nsIndexPath: NSIndexPath) -> SZIndexPath {
+        return SZIndexPath()
+    }
+
+    class func nsIndexPath(fromInternalIndexPath szIndexPath: SZIndexPath) -> NSIndexPath {
+
+//        // columns
+//        var totalColumnsNumber: Int = 0
+//        let columnSectionsNumber = dataSource.numberOfColumnsSectionsInTableView(self.collectionView!)
+//        for columnSectionIndex in 0..<columnSectionsNumber {
+//            totalColumnsNumber += dataSource.numberOfColumnsInSection(columnSectionIndex, ofTableView: self.collectionView!)
+//        }
+//
+//        var totalRowsNumber: Int = 0
+//        let rowSectionsNumber = dataSource.numberOfColumnsSectionsInTableView(self.collectionView!)
+//        for rowSectionIndex in 0..<rowSectionsNumber {
+//            totalRowsNumber += dataSource.numberOfRowsInSection(rowSectionIndex, ofTableView: self.collectionView!)
+//        }
+//
+//        let totalCellsNumber = totalColumnsNumber * totalRowsNumber
+//
+//        // TODO: continue here
+
+        return NSIndexPath()
+    }
+
+    class func szReusableViewKind(fromStandardIndexPath nsIndexPath: NSIndexPath) -> SZReusableViewKind {
+        return SZReusableViewKind.Cell
+    }
+}
+

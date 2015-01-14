@@ -191,15 +191,15 @@ class SZTableViewLayout: UICollectionViewLayout {
     override func layoutAttributesForItemAtIndexPath(indexPath: NSIndexPath) -> UICollectionViewLayoutAttributes! {
         var result: UICollectionViewLayoutAttributes? = nil
         if let layoutAttributes = layoutInfo[SZReusableViewKind.Cell] as LayoutAttributes? {
-            result = layoutAttributes[szIndexPath(fromStandardIndexPath: indexPath)]
+            result = layoutAttributes[SZIndexPath.szIndexPath(fromStandardIndexPath: indexPath)]
         }
         return result
     }
     
     override func layoutAttributesForSupplementaryViewOfKind(elementKind: String, atIndexPath indexPath: NSIndexPath) -> UICollectionViewLayoutAttributes! {
         var result: UICollectionViewLayoutAttributes? = nil
-        if let layoutAttributes = layoutInfo[szReusableViewKind(fromStandardIndexPath: indexPath)] as LayoutAttributes? {
-            result = layoutAttributes[szIndexPath(fromStandardIndexPath: indexPath)]
+        if let layoutAttributes = layoutInfo[SZIndexPath.szReusableViewKind(fromStandardIndexPath: indexPath)] as LayoutAttributes? {
+            result = layoutAttributes[SZIndexPath.szIndexPath(fromStandardIndexPath: indexPath)]
         }
         return result
     }
@@ -220,39 +220,3 @@ private extension SZTableViewLayout {
         return CGRect.zeroRect
     }
 }
-
-// MARK: Index paths conversions
-
-private extension SZTableViewLayout {
-    
-    func szIndexPath(fromStandardIndexPath nsIndexPath: NSIndexPath) -> SZIndexPath {
-        return SZIndexPath()
-    }
-    
-    func nsIndexPath(fromInternalIndexPath szIndexPath: SZIndexPath) -> NSIndexPath {
-        
-        // columns
-        var totalColumnsNumber: Int = 0
-        let columnSectionsNumber = dataSource.numberOfColumnsSectionsInTableView(self.collectionView!)
-        for columnSectionIndex in 0..<columnSectionsNumber {
-            totalColumnsNumber += dataSource.numberOfColumnsInSection(columnSectionIndex, ofTableView: self.collectionView!)
-        }
-        
-        var totalRowsNumber: Int = 0
-        let rowSectionsNumber = dataSource.numberOfColumnsSectionsInTableView(self.collectionView!)
-        for rowSectionIndex in 0..<rowSectionsNumber {
-            totalRowsNumber += dataSource.numberOfRowsInSection(rowSectionIndex, ofTableView: self.collectionView!)
-        }
-
-        let totalCellsNumber = totalColumnsNumber * totalRowsNumber
-        
-        // TODO: continue here
-        
-        return NSIndexPath()
-    }
-    
-    func szReusableViewKind(fromStandardIndexPath nsIndexPath: NSIndexPath) -> SZReusableViewKind {
-        return SZReusableViewKind.Cell
-    }
-}
-

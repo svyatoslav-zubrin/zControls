@@ -8,25 +8,22 @@
 
 import UIKit
 
-class SZTableViewLayoutAttributes: UICollectionViewLayoutAttributes {
+class SZTableViewLayoutAttributes: NSObject {
     
     private(set) var szKind: SZReusableViewKind
+    private(set) var szIndexPath: SZIndexPath
+    
+    var frame: CGRect = CGRect.zeroRect
     
     init(forCellWithIndexPath _indexPath: SZIndexPath) {
-        
         szKind = SZReusableViewKind.Cell
-
+        szIndexPath = _indexPath
         super.init()
-        
-        indexPath = _indexPath.nsIndexPath()
     }
     
     init(forHeaderOfKind kind: SZReusableViewKind, atIndexPath _indexPath: SZIndexPath) {
-        
         szKind = kind
-        
+        szIndexPath = _indexPath
         super.init()
-        
-        indexPath = _indexPath.nsIndexPath()
     }
 }
