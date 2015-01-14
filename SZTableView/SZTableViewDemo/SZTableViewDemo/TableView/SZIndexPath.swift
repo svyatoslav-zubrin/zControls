@@ -8,7 +8,9 @@
 
 import UIKit
 
-class SZIndexPath: NSObject {
+class SZIndexPath
+    : NSObject
+{
    
     private(set) var rowSectionIndex: Int = 0
     private(set) var columnSectionIndex: Int = 0
@@ -27,40 +29,44 @@ class SZIndexPath: NSObject {
         rowIndex = _rowIndex
         columnIndex = _columnIndex
     }
+    
+    func description() -> String
+    {
+        return "iPath(\(rowSectionIndex), \(columnSectionIndex), \(rowIndex), \(columnIndex))"
+    }
 }
 
-// MARK: Index paths conversions
+// MARK: - Hashable
 
-extension SZIndexPath {
+extension SZIndexPath: Hashable
+{
+    var hasValue: Int {
+        let prime: Int = 31
+        var result: Int = 1
+        result = result * prime + rowSectionIndex.hashValue + columnSectionIndex.hashValue + rowIndex.hashValue + columnIndex.hashValue
+        return result
 
-    class func szIndexPath(fromStandardIndexPath nsIndexPath: NSIndexPath) -> SZIndexPath {
-        return SZIndexPath()
+//        return rowSectionIndex.hashValue ^
+//               columnSectionIndex.hashValue ^
+//               rowIndex.hashValue ^
+//               columnIndex.hashValue
     }
+}
 
-    class func nsIndexPath(fromInternalIndexPath szIndexPath: SZIndexPath) -> NSIndexPath {
+// MARK: - Equatable
 
-//        // columns
-//        var totalColumnsNumber: Int = 0
-//        let columnSectionsNumber = dataSource.numberOfColumnsSectionsInTableView(self.collectionView!)
-//        for columnSectionIndex in 0..<columnSectionsNumber {
-//            totalColumnsNumber += dataSource.numberOfColumnsInSection(columnSectionIndex, ofTableView: self.collectionView!)
-//        }
-//
-//        var totalRowsNumber: Int = 0
-//        let rowSectionsNumber = dataSource.numberOfColumnsSectionsInTableView(self.collectionView!)
-//        for rowSectionIndex in 0..<rowSectionsNumber {
-//            totalRowsNumber += dataSource.numberOfRowsInSection(rowSectionIndex, ofTableView: self.collectionView!)
-//        }
-//
-//        let totalCellsNumber = totalColumnsNumber * totalRowsNumber
-//
-//        // TODO: continue here
+extension SZIndexPath: Equatable {}
 
-        return NSIndexPath()
-    }
+func ==(lhs: SZIndexPath, rhs: SZIndexPath) -> Bool
+{
+    return lhs.rowSectionIndex    == rhs.rowSectionIndex
+        && lhs.columnSectionIndex == rhs.columnSectionIndex
+        && lhs.rowIndex           == rhs.rowIndex
+        && lhs.columnIndex        == rhs.columnIndex
+}
 
-    class func szReusableViewKind(fromStandardIndexPath nsIndexPath: NSIndexPath) -> SZReusableViewKind {
-        return SZReusableViewKind.Cell
-    }
+func !=(lhs: SZIndexPath, rhs: SZIndexPath) -> Bool
+{
+    return !(lhs == rhs)
 }
 

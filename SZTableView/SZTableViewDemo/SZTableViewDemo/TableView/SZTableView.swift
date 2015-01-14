@@ -86,6 +86,7 @@ class SZTableView
                 let cell = tableDataSource.tableView(self, cellForItemAtIndexPath: indexPath)
                 cell.frame = gridLayout.frameForCellAtIndexPath(indexPath)
                 self.addSubview(cell)
+                println(cell)
             }
         }
         

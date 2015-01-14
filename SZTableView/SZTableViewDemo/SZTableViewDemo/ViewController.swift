@@ -72,5 +72,12 @@ class ViewController
     func heightOfRaw(index: Int, ofTableView tableView: SZTableView) -> Float {
         return 100.0
     }
+    
+    // MARK: - User actions
+    
+    @IBAction func reloadAction(sender: UIButton)
+    {
+        tableView.reloadData()
+    }
 }
 
