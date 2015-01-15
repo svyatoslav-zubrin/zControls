@@ -10,5 +10,5 @@ import UIKit
 
 class SZTableViewCell: UIView
 {
-    let reuseIdentifier: String? = nil
+    var reuseIdentifier: String? = nil
 }

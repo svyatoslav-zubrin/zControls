@@ -14,8 +14,8 @@ class SZTableViewGridLayout: NSObject
     weak var tableView: SZTableView! = nil
     
     // geometry constants
-    let interColumnSpacing: Float = 0.0
-    let interRawSpacing   : Float = 0.0
+    var interColumnSpacing: Float = 0.0
+    var interRawSpacing   : Float = 0.0
     
     // privat properties
     typealias LayoutAttributes = [SZIndexPath: SZTableViewLayoutAttributes]
@@ -62,6 +62,33 @@ class SZTableViewGridLayout: NSObject
         }
         return CGRect.zeroRect
     }
+
+    // MARK: - Helpers
+
+    func borderVisibleIndexes() -> SZBorderIndexes
+    {
+        var indexPathsOfVisibleCells = [SZIndexPath]()
+
+        let visibleScrollRect = CGRect(x: tableView.contentOffset.x,
+                                    y: tableView.contentOffset.y,
+                                    width: tableView.bounds.width,
+                                    height: tableView.bounds.height)
+
+        if let cellsLayoutAttributes = layoutInfo[SZReusableViewKind.Cell] as LayoutAttributes? {
+            for (indexPath, attributes) in cellsLayoutAttributes {
+                if (CGRectIntersectsRect(visibleScrollRect, attributes.frame)) {
+                    indexPathsOfVisibleCells.append(indexPath)
+                }
+            }
+        }
+
+        var maxColumnIndex = maxElement{indexPathsOfVisibleCells.reduce{$0.columnIndex}}
+        var minColumnIndex = minElement{indexPathsOfVisibleCells.reduce{$0.columnIndex}}
+        var maxRawIndex = maxElement{indexPathsOfVisibleCells.reduce{$0.rawIndex}}
+        var minRawIndex = minElement{indexPathsOfVisibleCells.reduce{$0.rawIndex}}
+
+        return ((minColumnIndex, maxColumnIndex), (minRawIndex, maxRawIndex))
+    }
     
     // MARK: - Private
     
@@ -89,14 +116,14 @@ class SZTableViewGridLayout: NSObject
     {
         let rowsCount = tableView.tableDataSource.numberOfRowsInTableView(tableView)
         var height = layoutDelegate.heightOfRaw(rowsCount - 1, ofTableView: tableView)
-        for rowIndex in 0..<rowsCount {
+        for rowIndex in 1..<rowsCount {
             height += layoutDelegate.heightOfRaw(rowIndex, ofTableView: tableView) + interRawSpacing
         }
         
         
         let columnsCount = tableView.tableDataSource.numberOfColumnsInTableView(tableView)
         var width = layoutDelegate.widthOfColumn(columnsCount - 1, ofTableView: tableView)
-        for columnIndex in 0..<columnsCount {
+        for columnIndex in 1..<columnsCount {
             width += layoutDelegate.widthOfColumn(columnIndex, ofTableView: tableView) + interColumnSpacing
         }
         

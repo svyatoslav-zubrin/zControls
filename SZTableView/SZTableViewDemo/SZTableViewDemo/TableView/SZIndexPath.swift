@@ -8,8 +8,7 @@
 
 import UIKit
 
-class SZIndexPath
-    : NSObject
+class SZIndexPath: NSObject
 {
    
     private(set) var rowSectionIndex: Int = 0
@@ -40,16 +39,17 @@ class SZIndexPath
 
 extension SZIndexPath: Hashable
 {
-    var hasValue: Int {
+    override var hashValue: Int
+    {
         let prime: Int = 31
         var result: Int = 1
-        result = result * prime + rowSectionIndex.hashValue + columnSectionIndex.hashValue + rowIndex.hashValue + columnIndex.hashValue
-        return result
 
-//        return rowSectionIndex.hashValue ^
-//               columnSectionIndex.hashValue ^
-//               rowIndex.hashValue ^
-//               columnIndex.hashValue
+        result = result * prime + rowSectionIndex.hashValue
+        result = result * prime + columnSectionIndex.hashValue
+        result = result * prime + rowIndex.hashValue
+        result = result * prime + columnIndex.hashValue
+        
+        return result
     }
 }
 

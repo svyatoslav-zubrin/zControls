@@ -17,67 +17,85 @@ class ViewController
 {
     @IBOutlet weak var tableView: SZTableView!
     
+    let rowsNumber = 13
+    let colsNumber = 15
+    
+    // MARK: - Lifecycle
+    
     override func viewDidLoad()
     {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
         
         let cellNib = UINib(nibName: "SimpleTableCell", bundle: NSBundle.mainBundle())
         tableView.registerNib(cellNib, forCellWithReuseIdentifier: "SimpleCell")
+        tableView.directionalLockEnabled = true
         let layout = SZTableViewGridLayout()
         layout.layoutDelegate = self
+        layout.interColumnSpacing = 5
+        layout.interRawSpacing = 10
         layout.tableView = self.tableView
         tableView.gridLayout = layout
         tableView.tableDataSource = self
         tableView.tableDelegate = self
         
         // debug:
-        tableView.layer.borderColor = UIColor.redColor().CGColor
-        tableView.layer.borderWidth = 2.0
+//        tableView.layer.borderColor = UIColor.redColor().CGColor
+//        tableView.layer.borderWidth = 2.0
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(animated: Bool)
+    {
         super.viewWillAppear(animated)
+    
         tableView.reloadData()
     }
 
-    override func didReceiveMemoryWarning()
-    {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
-    // MARK: - SZTableViewDataSource
-
-    func numberOfRowsInTableView(tableView: SZTableView) -> Int {
-        return 3
-    }
-    
-    func numberOfColumnsInTableView(tableView: SZTableView) -> Int {
-        return 15
-    }
-
-    func tableView(tableView: SZTableView, cellForItemAtIndexPath indexPath: SZIndexPath) -> SZTableViewCell {
-        let cell = tableView.dequeReusableCellWithIdentifier("SimpleCell")
-        cell!.layer.borderColor = UIColor.blueColor().CGColor
-        cell!.layer.borderWidth = 3.0
-        return cell!
-    }
-    // MARK: - SZTableViewGridLayoutDelegate
-    
-    func widthOfColumn(index: Int, ofTableView tableView: SZTableView) -> Float {
-        return 50.0
-    }
-    
-    func heightOfRaw(index: Int, ofTableView tableView: SZTableView) -> Float {
-        return 100.0
-    }
-    
     // MARK: - User actions
     
     @IBAction func reloadAction(sender: UIButton)
     {
         tableView.reloadData()
+    }
+}
+
+// MARK: - SZTableViewDataSource
+
+extension ViewController
+{
+    func numberOfRowsInTableView(tableView: SZTableView) -> Int {
+        return rowsNumber
+    }
+    
+    func numberOfColumnsInTableView(tableView: SZTableView) -> Int {
+        return colsNumber
+    }
+
+    func tableView(tableView: SZTableView, cellForItemAtIndexPath indexPath: SZIndexPath) -> SZTableViewCell {
+        let cell = tableView.dequeReusableCellWithIdentifier("SimpleCell")
+        
+        let red     = CGFloat(indexPath.columnIndex) / CGFloat(colsNumber)
+        let green   = CGFloat(indexPath.rowIndex) / CGFloat(rowsNumber)
+        let blue    = CGFloat(0.3)
+        let bgColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+        cell?.backgroundColor = bgColor
+        
+//        cell!.layer.borderColor = UIColor.blueColor().CGColor
+//        cell!.layer.borderWidth = 3.0
+        
+        return cell!
+    }
+}
+
+// MARK: - SZTableViewGridLayoutDelegate
+    
+extension ViewController
+{
+    func widthOfColumn(index: Int, ofTableView tableView: SZTableView) -> Float {
+        return 40.0
+    }
+    
+    func heightOfRaw(index: Int, ofTableView tableView: SZTableView) -> Float {
+        return 70.0
     }
 }
 
