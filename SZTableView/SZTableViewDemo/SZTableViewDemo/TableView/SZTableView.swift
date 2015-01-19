@@ -191,12 +191,18 @@ extension SZTableView
 
 extension SZTableView: UIScrollViewDelegate
 {
+    enum SZTableViewInternalCellOperation
+    {
+        case Place
+        case Remove
+    }
+    
     func scrollViewDidScroll(scrollView: UIScrollView)
     {
         let newBorderIndexes = gridLayout.borderVisibleIndexes()
         getScrollDirection()
         
-        let indexesToRemove = findCellsToRemoveForScrollDirection(scrollDirection, andBorderIndexes: newBorderIndexes)
+        let indexesToRemove = findCellsForOperation(.Remove, andNewBorderIndexes: newBorderIndexes)
         for indexPath in indexesToRemove {
             if let cell = cellsOnView[indexPath] {
                 cell.removeFromSuperview()
@@ -205,7 +211,7 @@ extension SZTableView: UIScrollViewDelegate
             }
         }
         
-        let indexesToPlace = findCellsToPlaceForScrollDirection(scrollDirection, andBorderIndexes: newBorderIndexes)
+        let indexesToPlace = findCellsForOperation(.Place, andNewBorderIndexes: newBorderIndexes)
         for indexPath in indexesToPlace {
             placeCellWithIndexPath(indexPath)
         }
@@ -213,56 +219,10 @@ extension SZTableView: UIScrollViewDelegate
         borderIndexes = newBorderIndexes
     }
 
-    func findCellsToPlaceForScrollDirection(direction: SZTableViewScrollDirection,
-                                            andBorderIndexes newBorderIndexes: SZBorderIndexes) -> [SZIndexPath]
+    func findCellsForOperation(operation: SZTableViewInternalCellOperation,
+            andNewBorderIndexes newBorderIndexes: SZBorderIndexes) -> [SZIndexPath]
     {
-        var indexesToPlace = [SZIndexPath]()
-
-        for z in 0...1 { // 0 - for columns, 1 - for rows
-
-            let mainItem        = z==0 ? borderIndexes.column : borderIndexes.row
-            let oppositeItem    = z==0 ? borderIndexes.row : borderIndexes.column
-            let newMainItem     = z==0 ? newBorderIndexes.column : newBorderIndexes.row
-            let newOppositeItem = z==0 ? newBorderIndexes.row : newBorderIndexes.column
-            let scrollDirectionToHandle = z==0 ? scrollDirection.horizontal : scrollDirection.vertical
-            
-            if scrollDirectionToHandle == SZScrollDirection.FromMinToMax {
-                if mainItem.maxIndex <= newMainItem.maxIndex {
-                    for mainIndex in mainItem.maxIndex ... newMainItem.maxIndex {
-                        for oppositeIndex in newOppositeItem.minIndex ... newOppositeItem.maxIndex {
-                            let columnIndex = z==0 ? mainIndex : oppositeIndex
-                            let rowIndex    = z==0 ? oppositeIndex : mainIndex
-                            indexesToPlace.append(SZIndexPath(rowSectionIndex: 0,
-                                columnSectionIndex: 0,
-                                rowIndex: rowIndex,
-                                columnIndex: columnIndex))
-                        }
-                    }
-                }
-            }
-            else if scrollDirectionToHandle == SZScrollDirection.FromMaxToMin {
-                if mainItem.minIndex <= newMainItem.minIndex {
-                    for mainIndex in mainItem.minIndex ... newMainItem.minIndex {
-                        for oppositeIndex in newOppositeItem.minIndex ... newOppositeItem.maxIndex {
-                            let columnIndex = z==0 ? mainIndex : oppositeIndex
-                            let rowIndex    = z==0 ? oppositeIndex : mainIndex
-                            indexesToPlace.append(SZIndexPath(rowSectionIndex: 0,
-                                columnSectionIndex: 0,
-                                rowIndex: rowIndex,
-                                columnIndex: columnIndex))
-                        }
-                    }
-                }
-            }
-        }
-
-        return indexesToPlace
-    }
-
-    func findCellsToRemoveForScrollDirection(direction: SZTableViewScrollDirection,
-                                             andBorderIndexes newBorderIndexes: SZBorderIndexes) -> [SZIndexPath]
-    {
-        var indexesToRemove = [SZIndexPath]()
+        var indexes = [SZIndexPath]()
         
         for z in 0...1 { // 0 - for columns, 1 - for rows
             
@@ -271,14 +231,15 @@ extension SZTableView: UIScrollViewDelegate
             let newMainItem     = z==0 ? newBorderIndexes.column : newBorderIndexes.row
             let newOppositeItem = z==0 ? newBorderIndexes.row : newBorderIndexes.column
             let scrollDirectionToHandle = z==0 ? scrollDirection.horizontal : scrollDirection.vertical
-
+            
             if scrollDirectionToHandle == SZScrollDirection.FromMinToMax {
-                if mainItem.maxIndex < newMainItem.maxIndex {
-                    for mainIndex in mainItem.maxIndex ..< newMainItem.maxIndex {
+                let maxIndexValue = operation == .Place ? newMainItem.maxIndex + 1 : newMainItem.maxIndex
+                if mainItem.maxIndex < maxIndexValue {
+                    for mainIndex in mainItem.maxIndex ... newMainItem.maxIndex {
                         for oppositeIndex in newOppositeItem.minIndex ... newOppositeItem.maxIndex {
                             let columnIndex = z==0 ? mainIndex : oppositeIndex
                             let rowIndex    = z==0 ? oppositeIndex : mainIndex
-                            indexesToRemove.append(SZIndexPath(rowSectionIndex: 0,
+                            indexes.append(SZIndexPath(rowSectionIndex: 0,
                                 columnSectionIndex: 0,
                                 rowIndex: rowIndex,
                                 columnIndex: columnIndex))
@@ -287,12 +248,13 @@ extension SZTableView: UIScrollViewDelegate
                 }
             }
             else if scrollDirectionToHandle == SZScrollDirection.FromMaxToMin {
-                if mainItem.minIndex < newMainItem.minIndex {
-                    for mainIndex in mainItem.minIndex ..< newMainItem.minIndex {
+                let maxIndexValue = operation == .Place ? newMainItem.minIndex + 1 : newMainItem.minIndex
+                if mainItem.minIndex < maxIndexValue {
+                    for mainIndex in mainItem.minIndex ... maxIndexValue {
                         for oppositeIndex in newOppositeItem.minIndex ... newOppositeItem.maxIndex {
                             let columnIndex = z==0 ? mainIndex : oppositeIndex
                             let rowIndex    = z==0 ? oppositeIndex : mainIndex
-                            indexesToRemove.append(SZIndexPath(rowSectionIndex: 0,
+                            indexes.append(SZIndexPath(rowSectionIndex: 0,
                                 columnSectionIndex: 0,
                                 rowIndex: rowIndex,
                                 columnIndex: columnIndex))
@@ -301,7 +263,7 @@ extension SZTableView: UIScrollViewDelegate
                 }
             }
         }
-
-        return indexesToRemove
+        
+        return indexes
     }
 }
