@@ -37,10 +37,6 @@ class ViewController
         tableView.gridLayout = layout
         tableView.tableDataSource = self
         tableView.tableDelegate = self
-        
-        // debug:
-//        tableView.layer.borderColor = UIColor.redColor().CGColor
-//        tableView.layer.borderWidth = 2.0
     }
     
     override func viewDidAppear(animated: Bool)

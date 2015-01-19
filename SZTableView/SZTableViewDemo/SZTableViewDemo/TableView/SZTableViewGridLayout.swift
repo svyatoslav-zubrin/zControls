@@ -10,6 +10,16 @@ import UIKit
 
 class SZTableViewGridLayout: NSObject
 {
+    // MARK: - Global TODOs:
+    // MARK: ...implement correct attributes calculation for the case of variable width/height of column/row
+    // MARK: ...implement cache for global paramenters and layout attributes
+    // MARK: ...implement expandable Raws and columns
+    // MARK: ...implement sorting of all the table with tap on the column/Raw/section header
+    // MARK: ...implement possibility to fix the posiiton of column/Raw/section
+    // MARK: ...implement filtering of the table over column/Raw/section content
+    // MARK: ...implement inline editing of the cell content
+    // MARK: -
+    
     var layoutDelegate: SZTableViewGridLayoutDelegate! = nil
     weak var tableView: SZTableView! = nil
     
