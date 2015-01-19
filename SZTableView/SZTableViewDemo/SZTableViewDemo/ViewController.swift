@@ -17,8 +17,8 @@ class ViewController
 {
     @IBOutlet weak var tableView: SZTableView!
     
-    let rowsNumber = 13
-    let colsNumber = 15
+    let rowsNumber = 15
+    let colsNumber = 25
     
     // MARK: - Lifecycle
     
@@ -31,7 +31,7 @@ class ViewController
         tableView.directionalLockEnabled = true
         let layout = SZTableViewGridLayout()
         layout.layoutDelegate = self
-        layout.interColumnSpacing = 5
+        layout.interColumnSpacing = 10
         layout.interRawSpacing = 10
         layout.tableView = self.tableView
         tableView.gridLayout = layout

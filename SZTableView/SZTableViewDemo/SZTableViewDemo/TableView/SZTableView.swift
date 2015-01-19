@@ -100,11 +100,10 @@ class SZTableView
         // renew data
 
         // remove all subviews (place to reuse pool if needed)
-        for view in subviews {
-            if view is SZTableViewCell {
-                view.removeFromSuperview()
-            }
+        for (_, cell) in cellsOnView {
+            cell.removeFromSuperview()
         }
+        cellsOnView.removeAll(keepCapacity: true)
 
         gridLayout.prepareLayout()
         borderIndexes = gridLayout.borderVisibleIndexes()
@@ -165,10 +164,25 @@ class SZTableView
     
     private func placeCellWithIndexPath(indexPath: SZIndexPath)
     {
+        // prevent cells duplication
+        // ...perhaps it may me replaced with correct border indexes calculation in 'borderVisibleIndexes()')
+        if let cellOnView = cellsOnView[indexPath] {
+            return
+        }
+        
         let cell = tableDataSource.tableView(self, cellForItemAtIndexPath: indexPath)
         cell.frame = gridLayout.frameForCellAtIndexPath(indexPath)
         self.addSubview(cell)
         cellsOnView[indexPath] = cell
+    }
+    
+    private func removeCellWithIndexPath(indexPath: SZIndexPath)
+    {
+        if let cell = cellsOnView[indexPath] {
+            cell.removeFromSuperview()
+            cellsOnView[indexPath] = nil
+            cellsReusePool[cell.reuseIdentifier!] = cell
+        }
     }
 }
 
@@ -204,11 +218,7 @@ extension SZTableView: UIScrollViewDelegate
         
         let indexesToRemove = findCellsForOperation(.Remove, andNewBorderIndexes: newBorderIndexes)
         for indexPath in indexesToRemove {
-            if let cell = cellsOnView[indexPath] {
-                cell.removeFromSuperview()
-                cellsOnView[indexPath] = nil
-                cellsReusePool[cell.reuseIdentifier!] = cell
-            }
+            removeCellWithIndexPath(indexPath)
         }
         
         let indexesToPlace = findCellsForOperation(.Place, andNewBorderIndexes: newBorderIndexes)
