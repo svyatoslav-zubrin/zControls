@@ -10,5 +10,7 @@ import UIKit
 
 class SZTableViewCell: UIView
 {
+    @IBOutlet weak var textLabel: UILabel!
+    
     var reuseIdentifier: String? = nil
 }

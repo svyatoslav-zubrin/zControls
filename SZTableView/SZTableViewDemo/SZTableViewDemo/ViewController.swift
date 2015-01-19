@@ -43,10 +43,10 @@ class ViewController
 //        tableView.layer.borderWidth = 2.0
     }
     
-    override func viewWillAppear(animated: Bool)
+    override func viewDidAppear(animated: Bool)
     {
-        super.viewWillAppear(animated)
-    
+        super.viewDidAppear(animated)
+        
         tableView.reloadData()
     }
 
@@ -79,8 +79,7 @@ extension ViewController
         let bgColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
         cell?.backgroundColor = bgColor
         
-//        cell!.layer.borderColor = UIColor.blueColor().CGColor
-//        cell!.layer.borderWidth = 3.0
+        cell?.textLabel.text = "\(indexPath.columnIndex + 1):\(indexPath.rowIndex + 1)"
         
         return cell!
     }
@@ -91,7 +90,7 @@ extension ViewController
 extension ViewController
 {
     func widthOfColumn(index: Int, ofTableView tableView: SZTableView) -> Float {
-        return 40.0
+        return 100.0
     }
     
     func heightOfRaw(index: Int, ofTableView tableView: SZTableView) -> Float {

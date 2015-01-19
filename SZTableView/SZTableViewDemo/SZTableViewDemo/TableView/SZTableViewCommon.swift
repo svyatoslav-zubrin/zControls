@@ -16,4 +16,4 @@ enum SZReusableViewKind {
     case RowsSectionHeader
 }
 
-typealias SZBorderIndexes = (column: (minIndex: Int, maxIndex: Int), raw: (minIndex: Int, maxIndex: Int))
+typealias SZBorderIndexes = (column: (minIndex: Int, maxIndex: Int), row: (minIndex: Int, maxIndex: Int))

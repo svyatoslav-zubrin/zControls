@@ -13,21 +13,24 @@
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TB3-07-q7T">
                     <rect key="frame" x="13" y="14" width="25" height="21"/>
                     <constraints>
-                        <constraint firstAttribute="width" constant="25" id="J7y-Eg-72i"/>
-                        <constraint firstAttribute="height" constant="21" id="fkQ-hS-tSS"/>
+                        <constraint firstAttribute="height" constant="21" id="5bQ-kh-n8F"/>
                     </constraints>
-                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
                     <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                     <nil key="highlightedColor"/>
                 </label>
             </subviews>
             <color key="backgroundColor" red="0.59999999999999998" green="0.80000000000000004" blue="0.40000000000000002" alpha="1" colorSpace="calibratedRGB"/>
             <constraints>
-                <constraint firstAttribute="centerY" secondItem="TB3-07-q7T" secondAttribute="centerY" id="hrc-S4-lly"/>
-                <constraint firstAttribute="centerX" secondItem="TB3-07-q7T" secondAttribute="centerX" id="t4v-nE-6Se"/>
+                <constraint firstItem="TB3-07-q7T" firstAttribute="leading" secondItem="o2D-23-gN2" secondAttribute="leading" constant="13" id="JZh-Hq-ihF"/>
+                <constraint firstAttribute="trailing" secondItem="TB3-07-q7T" secondAttribute="trailing" constant="12" id="K9t-Kt-bWK"/>
+                <constraint firstAttribute="centerY" secondItem="TB3-07-q7T" secondAttribute="centerY" id="qbq-vF-vFN"/>
             </constraints>
             <nil key="simulatedStatusBarMetrics"/>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="textLabel" destination="TB3-07-q7T" id="xN0-QW-SSB"/>
+            </connections>
             <point key="canvasLocation" x="682" y="415"/>
         </view>
     </objects>

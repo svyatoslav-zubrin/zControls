@@ -82,10 +82,10 @@ class SZTableViewGridLayout: NSObject
             }
         }
 
-        var maxColumnIndex = maxElement{indexPathsOfVisibleCells.reduce{$0.columnIndex}}
-        var minColumnIndex = minElement{indexPathsOfVisibleCells.reduce{$0.columnIndex}}
-        var maxRawIndex = maxElement{indexPathsOfVisibleCells.reduce{$0.rawIndex}}
-        var minRawIndex = minElement{indexPathsOfVisibleCells.reduce{$0.rawIndex}}
+        let maxColumnIndex = maxElement(indexPathsOfVisibleCells.map{$0.columnIndex})
+        let minColumnIndex = minElement(indexPathsOfVisibleCells.map{$0.columnIndex})
+        let maxRawIndex    = maxElement(indexPathsOfVisibleCells.map{$0.rowIndex})
+        let minRawIndex    = minElement(indexPathsOfVisibleCells.map{$0.rowIndex})
 
         return ((minColumnIndex, maxColumnIndex), (minRawIndex, maxRawIndex))
     }
