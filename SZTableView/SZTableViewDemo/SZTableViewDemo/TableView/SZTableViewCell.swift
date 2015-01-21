@@ -8,9 +8,30 @@
 
 import UIKit
 
-class SZTableViewCell: UIView
+class SZTableViewCell: SZTableViewReusableView
 {
     @IBOutlet weak var textLabel: UILabel!
     
-    var reuseIdentifier: String? = nil
+    override init(coder aDecoder: NSCoder)
+    {
+        super.init(coder: aDecoder)
+        setup()
+    }
+    
+    override init(frame: CGRect)
+    {
+        super.init(frame: frame)
+        setup()
+    }
+    
+    override init()
+    {
+        super.init()
+        setup()
+    }
+    
+    private func setup()
+    {
+        kind = SZReusableViewKind.Cell
+    }
 }

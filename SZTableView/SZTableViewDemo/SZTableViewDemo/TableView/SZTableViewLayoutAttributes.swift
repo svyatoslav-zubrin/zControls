@@ -10,20 +10,20 @@ import UIKit
 
 class SZTableViewLayoutAttributes: NSObject {
     
-    private(set) var szKind: SZReusableViewKind
-    private(set) var szIndexPath: SZIndexPath
+    private(set) var kind: SZReusableViewKind
+    private(set) var indexPath: SZIndexPath
     
     var frame: CGRect = CGRect.zeroRect
     
     init(forCellWithIndexPath _indexPath: SZIndexPath) {
-        szKind = SZReusableViewKind.Cell
-        szIndexPath = _indexPath
+        kind = SZReusableViewKind.Cell
+        indexPath = _indexPath
         super.init()
     }
     
-    init(forHeaderOfKind kind: SZReusableViewKind, atIndexPath _indexPath: SZIndexPath) {
-        szKind = kind
-        szIndexPath = _indexPath
+    init(forReusableViewOfKind _kind: SZReusableViewKind, atIndexPath _indexPath: SZIndexPath) {
+        kind = _kind
+        indexPath = _indexPath
         super.init()
     }
 }

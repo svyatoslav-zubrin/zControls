@@ -24,18 +24,21 @@ class SZTableView
     @IBOutlet weak var tableDataSource: SZTableViewDataSource!
     @IBOutlet weak var tableDelegate: SZTableViewDelegate!
 
-    var cellsReusePool = [String: SZTableViewCell]()
+    var reusePool = [String: SZTableViewReusableView]()
     var cellsOnView = [SZIndexPath: SZTableViewCell]()
+    var headersOnView = [SZIndexPath: SZTableViewReusableView]()
     
     var previousScrollPosition: CGPoint = CGPoint.zeroPoint
     var scrollDirection: SZTableViewScrollDirection = (SZScrollDirection.Unknown, SZScrollDirection.Unknown)
 
-    var registeredCellNibs = [String: UINib]()
-    var registeredCellClasses = [String: AnyClass]()
+    var registeredViewNibs = [String: UINib]()
+    var registeredViewClasses = [String: AnyClass]()
 
     var gridLayout: SZTableViewGridLayout!
 
-    var borderIndexes: SZBorderIndexes! = nil
+    var cellsBorderIndexes: SZBorderIndexes! = nil
+    var rowHeadersBorderIndexes: SZBorderIndexes? = nil
+    var columnHeadersBorderIndexes: SZBorderIndexes? = nil
 
     // MARK: - Lifecycle
 
@@ -45,35 +48,39 @@ class SZTableView
         setup()
     }
 
-    func setup()
+    private func setup()
     {
         self.delegate = self
         self.clipsToBounds = true
     }
+    
     // MARK: - Public
 
-    func dequeReusableCellWithIdentifier(reuseIdentifier: String) -> SZTableViewCell?
+    func dequeReusableViewOfKind(kind: SZReusableViewKind,
+                                 withReuseIdentifier reuseIdentifier: String) -> SZTableViewReusableView?
     {
-        if let cell = cellsReusePool[reuseIdentifier] {
-            cellsReusePool[reuseIdentifier] = nil
-            return cell
+        if let view = reusePool[reuseIdentifier] {
+            reusePool[reuseIdentifier] = nil
+            return view
         }
         else {
             // TODO: instantiate new cell and return it
             // return type after that must be changed to non-optional ))
-            if let cellNib = registeredCellNibs[reuseIdentifier] {
-                if let cell = loadCellFromNib(cellNib) {
-                    cell.reuseIdentifier = reuseIdentifier
-                    return cell
+            if let nib = registeredViewNibs[reuseIdentifier] {
+                if let view = loadReusableViewFromNib(nib) {
+                    view.reuseIdentifier = reuseIdentifier
+                    view.kind = kind
+                    return view
                 }
                 else {
                     return nil
                 }
             }
-            else if let cellClass: AnyClass = registeredCellClasses[reuseIdentifier] {
-                if let cell = loadCellFromClass(cellClass) {
-                    cell.reuseIdentifier = reuseIdentifier
-                    return cell
+            else if let cellClass: AnyClass = registeredViewClasses[reuseIdentifier] {
+                if let view = loadCellFromClass(cellClass) {
+                    view.reuseIdentifier = reuseIdentifier
+                    view.kind = kind
+                    return view
                 }
                 else {
                     return nil
@@ -83,20 +90,20 @@ class SZTableView
         }
     }
 
-    private func registerClass(cellClass: AnyClass, forCellWithReuseIdentifier cellReuseIdentifier: String)
+    private func registerClass(cellClass: AnyClass,
+                               forCellWithReuseIdentifier cellReuseIdentifier: String)
     {
-        registeredCellClasses[cellReuseIdentifier] = cellClass
-        registeredCellNibs[cellReuseIdentifier] = nil
+        registeredViewClasses[cellReuseIdentifier] = cellClass
+        registeredViewNibs[cellReuseIdentifier] = nil
     }
 
-    func registerNib(cellNib: UINib, forCellWithReuseIdentifier cellReuseIdentifier: String)
+    func registerNib(nib: UINib, forViewWithReuseIdentifier reuseIdentifier: String)
     {
-        registeredCellNibs[cellReuseIdentifier] = cellNib
-        registeredCellClasses[cellReuseIdentifier] = nil
+        registeredViewNibs[reuseIdentifier] = nib
+        registeredViewClasses[reuseIdentifier] = nil
     }
 
-    func reloadData()
-    {
+    func reloadData() {
         // renew data
 
         // remove all subviews (place to reuse pool if needed)
@@ -104,13 +111,31 @@ class SZTableView
             cell.removeFromSuperview()
         }
         cellsOnView.removeAll(keepCapacity: true)
+        for (_, header) in headersOnView {
+            header.removeFromSuperview()
+        }
+        headersOnView.removeAll(keepCapacity: true)
 
+        // 
         gridLayout.prepareLayout()
-        borderIndexes = gridLayout.borderVisibleIndexes()
+        cellsBorderIndexes = gridLayout.cellsVisibleBorderIndexes()
+        rowHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(SZReusableViewKind.RowHeader)
+        columnHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(SZReusableViewKind.ColumnHeader)
 
+        // add all needed headers
+        if rowHeadersBorderIndexes != nil {
+            for rowIndex in rowHeadersBorderIndexes!.row.minIndex ... rowHeadersBorderIndexes!.row.maxIndex {
+                let indexPath = SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex)
+                placeHeaderOfKind(SZReusableViewKind.RowHeader, atIndexPath: indexPath)
+            }
+            for columnIndex in columnHeadersBorderIndexes!.column.minIndex ... columnHeadersBorderIndexes!.column.maxIndex {
+                let indexPath = SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex)
+                placeHeaderOfKind(SZReusableViewKind.ColumnHeader, atIndexPath: indexPath)
+            }
+        }
         // add all needed cells again
-        for rowIndex in borderIndexes.row.minIndex ... borderIndexes.row.maxIndex {
-            for columnIndex in borderIndexes.column.minIndex ... borderIndexes.column.maxIndex {
+        for rowIndex in cellsBorderIndexes.row.minIndex ... cellsBorderIndexes.row.maxIndex {
+            for columnIndex in cellsBorderIndexes.column.minIndex ... cellsBorderIndexes.column.maxIndex {
                 let indexPath = SZIndexPath(rowSectionIndex: 0,
                                             columnSectionIndex: 0,
                                             rowIndex: rowIndex,
@@ -124,9 +149,10 @@ class SZTableView
 
     // MARK: - Private
 
-    private func loadCellFromNib(nib: UINib) -> SZTableViewCell?
+    private func loadReusableViewFromNib(nib: UINib) -> SZTableViewReusableView?
     {
-        return nib.instantiateWithOwner(nil, options: nil).first as? SZTableViewCell
+        let array = nib.instantiateWithOwner(nil, options: nil)
+        return array.first as? SZTableViewReusableView
     }
 
     private func loadCellFromClass(cellClass: AnyClass) -> SZTableViewCell?
@@ -165,13 +191,13 @@ class SZTableView
     private func placeCellWithIndexPath(indexPath: SZIndexPath)
     {
         // prevent cells duplication
-        // ...perhaps it may me replaced with correct border indexes calculation in 'borderVisibleIndexes()')
+        // ...perhaps it may me replaced with correct border indexes calculation in 'borderVisibleIndexes()'
         if let cellOnView = cellsOnView[indexPath] {
             return
         }
         
         let cell = tableDataSource.tableView(self, cellForItemAtIndexPath: indexPath)
-        cell.frame = gridLayout.frameForCellAtIndexPath(indexPath)
+        cell.frame = gridLayout.frameForReusableViewOfKind(SZReusableViewKind.Cell, atIndexPath: indexPath)
         self.addSubview(cell)
         cellsOnView[indexPath] = cell
     }
@@ -181,23 +207,33 @@ class SZTableView
         if let cell = cellsOnView[indexPath] {
             cell.removeFromSuperview()
             cellsOnView[indexPath] = nil
-            cellsReusePool[cell.reuseIdentifier!] = cell
+            reusePool[cell.reuseIdentifier!] = cell
         }
     }
-}
-
-// MARK: - Reuse cache operations
-
-extension SZTableView
-{
-    func cacheCell(cell: SZTableViewCell, forReuseIdentifier reuseIdentifier: String)
+    
+    private func placeHeaderOfKind(kind: SZReusableViewKind, atIndexPath indexPath: SZIndexPath)
     {
-        cellsReusePool[reuseIdentifier] = cell
+        // prevent cells duplication
+        // ...perhaps it may me replaced with correct border indexes calculation in 'borderVisibleIndexes()'
+        if let cellOnView = headersOnView[indexPath] {
+            return
+        }
+        
+        let header = kind == SZReusableViewKind.ColumnHeader
+                        ? tableDataSource.tableView!(self, headerForColumnAtIndex: indexPath.columnIndex)
+                        : tableDataSource.tableView!(self, headerForRowAtIndex: indexPath.rowIndex)
+        header.frame = gridLayout.frameForReusableViewOfKind(kind, atIndexPath: indexPath)
+        self.addSubview(header)
+        headersOnView[indexPath] = header
     }
     
-    func cachedCellForReuseIdentifier(reuseIdentifier: String) -> SZTableViewCell?
+    private func removeHeaderAtIndexPath(indexPath: SZIndexPath)
     {
-        return cellsReusePool[reuseIdentifier]
+        if let header = headersOnView[indexPath] {
+            header.removeFromSuperview()
+            headersOnView[indexPath] = nil
+            reusePool[header.reuseIdentifier!] = header
+        }
     }
 }
 
@@ -213,31 +249,68 @@ extension SZTableView: UIScrollViewDelegate
     
     func scrollViewDidScroll(scrollView: UIScrollView)
     {
-        let newBorderIndexes = gridLayout.borderVisibleIndexes()
         getScrollDirection()
-        
-        let indexesToRemove = findCellsForOperation(.Remove, andNewBorderIndexes: newBorderIndexes)
-        for indexPath in indexesToRemove {
+
+        // column headers
+        let newColumnHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(SZReusableViewKind.ColumnHeader)
+        let columnHedearsToRemove = findHeadersOfKind(SZReusableViewKind.ColumnHeader,
+                                                     forOperation: .Remove,
+                                                     andNewBorderIndexes: newColumnHeadersBorderIndexes!)
+        for indexPath in columnHedearsToRemove {
+            removeHeaderAtIndexPath(indexPath)
+        }
+        let columnHeadersToPlace = findHeadersOfKind(SZReusableViewKind.ColumnHeader,
+                forOperation: .Place,
+                andNewBorderIndexes: newColumnHeadersBorderIndexes!)
+        for indexPath in columnHeadersToPlace {
+            placeHeaderOfKind(SZReusableViewKind.ColumnHeader, atIndexPath: indexPath)
+        }
+        columnHeadersBorderIndexes = newColumnHeadersBorderIndexes
+
+        // row headers
+        let newRowHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(SZReusableViewKind.RowHeader)
+        let rowHeadersToRemove = findHeadersOfKind(SZReusableViewKind.RowHeader,
+                forOperation: .Remove,
+                andNewBorderIndexes: newRowHeadersBorderIndexes!)
+        for indexPath in rowHeadersToRemove {
+            removeHeaderAtIndexPath(indexPath)
+        }
+        let rowHeadersToPlace = findHeadersOfKind(SZReusableViewKind.RowHeader,
+                forOperation: .Place,
+                andNewBorderIndexes: newRowHeadersBorderIndexes!)
+        for indexPath in rowHeadersToPlace {
+            placeHeaderOfKind(SZReusableViewKind.RowHeader, atIndexPath: indexPath)
+        }
+        rowHeadersBorderIndexes = newRowHeadersBorderIndexes
+
+        // cells
+        let newCellsBorderIndexes = gridLayout.cellsVisibleBorderIndexes()
+
+        let cellIndexesToRemove = findCellsForOperation(.Remove, andNewBorderIndexes: newCellsBorderIndexes)
+        for indexPath in cellIndexesToRemove {
             removeCellWithIndexPath(indexPath)
         }
         
-        let indexesToPlace = findCellsForOperation(.Place, andNewBorderIndexes: newBorderIndexes)
-        for indexPath in indexesToPlace {
+        let cellIndexesToPlace = findCellsForOperation(.Place, andNewBorderIndexes: newCellsBorderIndexes)
+        for indexPath in cellIndexesToPlace {
             placeCellWithIndexPath(indexPath)
         }
 
-        borderIndexes = newBorderIndexes
+        cellsBorderIndexes = newCellsBorderIndexes
+
+        // global
+        setNeedsDisplay()
     }
 
     func findCellsForOperation(operation: SZTableViewInternalCellOperation,
-            andNewBorderIndexes newBorderIndexes: SZBorderIndexes) -> [SZIndexPath]
+                               andNewBorderIndexes newBorderIndexes: SZBorderIndexes) -> [SZIndexPath]
     {
         var indexes = [SZIndexPath]()
         
         for z in 0...1 { // 0 - for columns, 1 - for rows
             
-            let mainItem        = z==0 ? borderIndexes.column : borderIndexes.row
-            let oppositeItem    = z==0 ? borderIndexes.row : borderIndexes.column
+            let mainItem        = z==0 ? cellsBorderIndexes.column : cellsBorderIndexes.row
+            let oppositeItem    = z==0 ? cellsBorderIndexes.row : cellsBorderIndexes.column
             let newMainItem     = z==0 ? newBorderIndexes.column : newBorderIndexes.row
             let newOppositeItem = z==0 ? newBorderIndexes.row : newBorderIndexes.column
             let scrollDirectionToHandle = z==0 ? scrollDirection.horizontal : scrollDirection.vertical
@@ -274,6 +347,105 @@ extension SZTableView: UIScrollViewDelegate
             }
         }
         
+        return indexes
+    }
+    
+    func findHeadersOfKind(kind: SZReusableViewKind,
+                           forOperation operation: SZTableViewInternalCellOperation,
+                           andNewBorderIndexes newBorderIndexes: SZBorderIndexes) -> [SZIndexPath]
+    {
+        var indexes = [SZIndexPath]()
+
+        // columns
+        let newHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(kind)
+        let isColumns = kind == SZReusableViewKind.ColumnHeader
+        let borderIndexes = isColumns ? columnHeadersBorderIndexes : rowHeadersBorderIndexes
+        if isColumns { // column headers
+            if scrollDirection.horizontal == .FromMinToMax {
+                if operation == .Remove {
+                    let minIndex = columnHeadersBorderIndexes!.column.minIndex
+                    let maxIndex = newHeadersBorderIndexes!.column.minIndex
+                    if minIndex < maxIndex {
+                        for columnIndex in minIndex ... maxIndex {
+                            indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+                        }
+                    }
+                }
+                else {
+                    let minIndex = columnHeadersBorderIndexes!.column.maxIndex
+                    let maxIndex = newHeadersBorderIndexes!.column.maxIndex + 1
+                    if minIndex < maxIndex {
+                        for columnIndex in minIndex ... maxIndex {
+                            indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+                        }
+                    }
+                }
+            }
+            else if scrollDirection.horizontal == .FromMaxToMin {
+                if operation == .Remove {
+                    let minIndex = columnHeadersBorderIndexes!.column.maxIndex
+                    let maxIndex = newHeadersBorderIndexes!.column.maxIndex
+                    if minIndex < maxIndex {
+                        for columnIndex in minIndex ... maxIndex {
+                            indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+                        }
+                    }
+                }
+                else {
+                    let minIndex = columnHeadersBorderIndexes!.column.minIndex
+                    let maxIndex = newHeadersBorderIndexes!.column.minIndex + 1
+                    if minIndex < maxIndex {
+                        for columnIndex in minIndex ... maxIndex {
+                            indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+                        }
+                    }
+                }
+            }
+        }
+        else { // row headers
+            if scrollDirection.vertical == .FromMinToMax {
+                if operation == .Remove {
+                    let minIndex = rowHeadersBorderIndexes!.row.minIndex
+                    let maxIndex = newHeadersBorderIndexes!.row.minIndex
+                    if minIndex < maxIndex {
+                        for rowIndex in minIndex ... maxIndex {
+                            indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
+                        }
+                    }
+                }
+                else {
+                    let minIndex = rowHeadersBorderIndexes!.row.maxIndex
+                    let maxIndex = newHeadersBorderIndexes!.row.maxIndex + 1
+                    if minIndex < maxIndex {
+                        for rowIndex in minIndex ... maxIndex {
+                            indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
+                        }
+                    }
+                }
+            }
+            else if scrollDirection.vertical == .FromMaxToMin {
+                if operation == .Remove {
+                    let minIndex = rowHeadersBorderIndexes!.row.maxIndex
+                    let maxIndex = newHeadersBorderIndexes!.row.maxIndex
+                    if minIndex < maxIndex {
+                        for rowIndex in minIndex ... maxIndex {
+                            indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
+                        }
+                    }
+                }
+                else {
+                    let minIndex = rowHeadersBorderIndexes!.row.minIndex
+                    let maxIndex = newHeadersBorderIndexes!.row.minIndex + 1
+                    if minIndex < maxIndex {
+                        for rowIndex in minIndex ... maxIndex {
+                            indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
+                        }
+                    }
+                }
+            }
+        }
+
+
         return indexes
     }
 }

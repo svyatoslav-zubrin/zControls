@@ -37,14 +37,49 @@ class SZTableViewGridLayout: NSObject
     func prepareLayout()
     {
         var newLayoutInfo = LayoutInfo()
-        var cellsLayoutAttributes = LayoutAttributes()
         
         let rowsCount = tableView.tableDataSource.numberOfRowsInTableView(tableView)
         let columnsCount = tableView.tableDataSource.numberOfColumnsInTableView(tableView)
-        let tableHasContent = columnsCount > 0 && rowsCount > 0
+
+        // headers
+        if isRowHeadersNeeded() && rowsCount > 0 {
+            
+            var rowHeadersLayoutAttributes = LayoutAttributes()
+            
+            for rowIndex in 0 ..< rowsCount {
+                let indexPath = SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex)
+                let viewAttributes = SZTableViewLayoutAttributes(forReusableViewOfKind: SZReusableViewKind.RowHeader,
+                                                                 atIndexPath: indexPath)
+                viewAttributes.frame = calculateFrameForReusableViewOfKind(SZReusableViewKind.RowHeader,
+                                                                           atIndexPath: indexPath)
+                rowHeadersLayoutAttributes[indexPath] = viewAttributes
+            }
+            
+            newLayoutInfo[SZReusableViewKind.RowHeader] = rowHeadersLayoutAttributes
+        }
+        if isColumnHeadersNeeded() && columnsCount > 0 {
+            
+            var columnHeadersLayoutAttributes = LayoutAttributes()
+
+            for columnIndex in 0 ..< columnsCount {
+                let indexPath = SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex)
+                let viewAttributes = SZTableViewLayoutAttributes(forReusableViewOfKind: SZReusableViewKind.ColumnHeader,
+                                                                 atIndexPath: indexPath)
+                viewAttributes.frame = calculateFrameForReusableViewOfKind(SZReusableViewKind.ColumnHeader,
+                                                                           atIndexPath: indexPath)
+                columnHeadersLayoutAttributes[indexPath] = viewAttributes
+            }
+            
+            newLayoutInfo[SZReusableViewKind.ColumnHeader] = columnHeadersLayoutAttributes
+        }
         
+        // cells
+        let tableHasContent = columnsCount > 0 && rowsCount > 0
         if tableHasContent {
-            for rowIndex in 0..<rowsCount {
+            
+            var cellsLayoutAttributes = LayoutAttributes()
+
+            for rowIndex in 0 ..< rowsCount {
                 for columnIndex in 0..<columnsCount {
                     let indexPath = SZIndexPath(rowSectionIndex: 0,
                                                 columnSectionIndex: 0,
@@ -55,19 +90,20 @@ class SZTableViewGridLayout: NSObject
                     cellsLayoutAttributes[indexPath] = cellAttributes
                 }
             }
+
+            newLayoutInfo[SZReusableViewKind.Cell] = cellsLayoutAttributes
         }
         
-        newLayoutInfo[SZReusableViewKind.Cell] = cellsLayoutAttributes
         layoutInfo = newLayoutInfo
         
         self.tableView.contentSize = calculateContentSize()
     }
 
-    func frameForCellAtIndexPath(indexPath: SZIndexPath) -> CGRect
+    func frameForReusableViewOfKind(kind: SZReusableViewKind, atIndexPath indexPath: SZIndexPath) -> CGRect
     {
-        if let cellsLayoutAttributes = layoutInfo[SZReusableViewKind.Cell] as LayoutAttributes? {
-            if let cellAttributes = cellsLayoutAttributes[indexPath] as SZTableViewLayoutAttributes? {
-                return cellAttributes.frame
+        if let viewsLayoutAttributes = layoutInfo[kind] as LayoutAttributes? {
+            if let viewAttributes = viewsLayoutAttributes[indexPath] as SZTableViewLayoutAttributes? {
+                return viewAttributes.frame
             }
         }
         return CGRect.zeroRect
@@ -75,14 +111,14 @@ class SZTableViewGridLayout: NSObject
 
     // MARK: - Helpers
 
-    func borderVisibleIndexes() -> SZBorderIndexes
+    func cellsVisibleBorderIndexes() -> SZBorderIndexes
     {
         var indexPathsOfVisibleCells = [SZIndexPath]()
 
         let visibleScrollRect = CGRect(x: tableView.contentOffset.x,
-                                    y: tableView.contentOffset.y,
-                                    width: tableView.bounds.width,
-                                    height: tableView.bounds.height)
+                                       y: tableView.contentOffset.y,
+                                       width: tableView.bounds.width,
+                                       height: tableView.bounds.height)
 
         if let cellsLayoutAttributes = layoutInfo[SZReusableViewKind.Cell] as LayoutAttributes? {
             for (indexPath, attributes) in cellsLayoutAttributes {
@@ -99,20 +135,65 @@ class SZTableViewGridLayout: NSObject
 
         return ((minColumnIndex, maxColumnIndex), (minRawIndex, maxRawIndex))
     }
+
+    func headersVisibleBorderIndexesForHeaderKind(kind: SZReusableViewKind) -> SZBorderIndexes?
+    {
+        var indexPathsOfVisibleHeaders = [SZIndexPath]()
+
+        let visibleScrollRect = CGRect(x: tableView.contentOffset.x,
+                y: tableView.contentOffset.y,
+                width: tableView.bounds.width,
+                height: tableView.bounds.height)
+
+        if let headersLayoutAttributes = layoutInfo[kind] as LayoutAttributes? {
+            for (indexPath, attributes) in headersLayoutAttributes {
+                if (CGRectIntersectsRect(visibleScrollRect, attributes.frame)) {
+                    indexPathsOfVisibleHeaders.append(indexPath)
+                }
+            }
+        }
+
+        let maxColumnIndex = maxElement(indexPathsOfVisibleHeaders.map{$0.columnIndex})
+        let minColumnIndex = minElement(indexPathsOfVisibleHeaders.map{$0.columnIndex})
+        let maxRawIndex    = maxElement(indexPathsOfVisibleHeaders.map{$0.rowIndex})
+        let minRawIndex    = minElement(indexPathsOfVisibleHeaders.map{$0.rowIndex})
+
+        return ((minColumnIndex, maxColumnIndex), (minRawIndex, maxRawIndex))
+    }
     
     // MARK: - Private
     
+    private func calculateFrameForReusableViewOfKind(kind: SZReusableViewKind,
+        atIndexPath indexPath: SZIndexPath) -> CGRect
+    {
+        var frame: CGRect? = nil
+        
+        switch kind {
+        case .Cell:
+            frame = calculateFrameForCellAtIndexPath(indexPath)
+        case .RowHeader:
+            frame = calculateFrameForRowHeaderAtIndexPath(indexPath)
+        case .ColumnHeader:
+            frame = calculateFrameForColumnHeaderAtIndexPath(indexPath)
+        default:
+            frame = CGRect.zeroRect
+        }
+        
+        return frame!
+    }
+    
     private func calculateFrameForCellAtIndexPath(indexPath: SZIndexPath) -> CGRect
     {
-        var height = layoutDelegate.heightOfRaw(indexPath.columnIndex, ofTableView: tableView)
-        var originY: Float = 0.0
-        for rowIndex in 0..<indexPath.rowIndex {
+        var height = layoutDelegate.heightOfRaw(indexPath.rowIndex, ofTableView: tableView)
+
+        var originY = columnHeadersHeight() + (columnHeadersHeight() == 0.0 ? 0.0 : interRawSpacing)
+        for rowIndex in 0 ..< indexPath.rowIndex {
             originY += layoutDelegate.heightOfRaw(rowIndex, ofTableView: tableView) + interRawSpacing
         }
 
         var width = layoutDelegate.widthOfColumn(indexPath.columnIndex, ofTableView: tableView)
-        var originX: Float = 0.0
-        for columnIndex in 0..<indexPath.columnIndex {
+        var originX = rowHeadersWidth() + (rowHeadersWidth() == 0.0 ? 0.0 : interColumnSpacing)
+        for columnIndex in 0 ..< indexPath.columnIndex {
             originX += layoutDelegate.widthOfColumn(columnIndex, ofTableView: tableView) + interColumnSpacing
         }
 
@@ -122,21 +203,108 @@ class SZTableViewGridLayout: NSObject
                       height: CGFloat(height))
     }
     
+    private func calculateFrameForRowHeaderAtIndexPath(indexPath: SZIndexPath) -> CGRect
+    {
+        var frame = CGRect.zeroRect
+        
+        if let headerWidth = layoutDelegate.widthForRowHeadersOfTableView?(tableView) {
+            let rowHeight = layoutDelegate.heightOfRaw(indexPath.rowIndex, ofTableView: tableView)
+            
+            var originY: Float = layoutDelegate.heightForColumnHeadersOfTableView?(tableView) != nil
+                                    ? layoutDelegate.heightForColumnHeadersOfTableView!(tableView) + interRawSpacing
+                                    : 0.0
+            
+            for rowIndex in 0 ..< indexPath.rowIndex {
+                originY += layoutDelegate.heightOfRaw(rowIndex, ofTableView: tableView) + interRawSpacing
+            }
+            
+            frame = CGRect(x: CGFloat(0.0),
+                           y: CGFloat(originY),
+                           width: CGFloat(headerWidth),
+                           height: CGFloat(rowHeight))
+        }
+        
+        return frame
+    }
+
+    private func calculateFrameForColumnHeaderAtIndexPath(indexPath: SZIndexPath) -> CGRect
+    {
+        var frame = CGRect.zeroRect
+        
+        if let headerHeight = layoutDelegate.heightForColumnHeadersOfTableView?(tableView) {
+            let columnWidth = layoutDelegate.widthOfColumn(indexPath.rowIndex, ofTableView: tableView)
+            
+            var originX: Float = layoutDelegate.widthForRowHeadersOfTableView?(tableView) != nil
+                                    ? layoutDelegate.widthForRowHeadersOfTableView!(tableView) + interColumnSpacing
+                                    : 0.0
+            for columnIndex in 0 ..< indexPath.columnIndex {
+                originX += layoutDelegate.widthOfColumn(columnIndex, ofTableView: tableView) + interColumnSpacing
+            }
+            
+            frame = CGRect(x: CGFloat(originX),
+                           y: CGFloat(0.0),
+                           width: CGFloat(columnWidth),
+                           height: CGFloat(headerHeight))
+        }
+        
+        return frame
+    }
+
     private func calculateContentSize() -> CGSize
     {
         let rowsCount = tableView.tableDataSource.numberOfRowsInTableView(tableView)
         var height = layoutDelegate.heightOfRaw(rowsCount - 1, ofTableView: tableView)
-        for rowIndex in 1..<rowsCount {
+                     + columnHeadersHeight()
+                     + (columnHeadersHeight() == 0.0 ? 0.0 : interRawSpacing)
+        for rowIndex in 1 ..< rowsCount {
             height += layoutDelegate.heightOfRaw(rowIndex, ofTableView: tableView) + interRawSpacing
         }
         
         
         let columnsCount = tableView.tableDataSource.numberOfColumnsInTableView(tableView)
         var width = layoutDelegate.widthOfColumn(columnsCount - 1, ofTableView: tableView)
-        for columnIndex in 1..<columnsCount {
+                    + rowHeadersWidth()
+                    + (rowHeadersWidth() == 0.0 ? 0.0 : interColumnSpacing)
+        for columnIndex in 1 ..< columnsCount {
             width += layoutDelegate.widthOfColumn(columnIndex, ofTableView: tableView) + interColumnSpacing
         }
         
         return CGSize(width: CGFloat(width), height: CGFloat(height))
+    }
+    
+    // Helpers
+    
+    private func isColumnHeadersNeeded() -> Bool
+    {
+        if let m = layoutDelegate.heightForColumnHeadersOfTableView? {
+            return true
+        }
+        else {
+            return false
+        }
+    }
+    
+    private func columnHeadersHeight() -> Float
+    {
+        return layoutDelegate.heightForColumnHeadersOfTableView?(tableView) != nil
+                ? layoutDelegate.heightForColumnHeadersOfTableView!(tableView)
+                : 0.0
+    }
+
+    private func rowHeadersWidth() -> Float
+    {
+        return layoutDelegate.widthForRowHeadersOfTableView?(tableView) != nil
+                ? layoutDelegate.widthForRowHeadersOfTableView!(tableView)
+                : 0.0
+    }
+
+    private func isRowHeadersNeeded() -> Bool
+    {
+        if let m = layoutDelegate.widthForRowHeadersOfTableView? {
+            return true
+        }
+        else {
+            return false
+        }
     }
 }

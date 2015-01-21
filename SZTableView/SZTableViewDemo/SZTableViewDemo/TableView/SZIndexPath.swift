@@ -41,8 +41,8 @@ extension SZIndexPath: Hashable
 {
     override var hashValue: Int
     {
-        let prime: Int = 31
-        var result: Int = 1
+        let prime : Int = 31
+        var result: Int =  1
 
         result = result * prime + rowSectionIndex.hashValue
         result = result * prime + columnSectionIndex.hashValue
@@ -68,5 +68,26 @@ func ==(lhs: SZIndexPath, rhs: SZIndexPath) -> Bool
 func !=(lhs: SZIndexPath, rhs: SZIndexPath) -> Bool
 {
     return !(lhs == rhs)
+}
+
+// MARK: particular index types
+
+extension SZIndexPath
+{
+    class func indexPathOfColumnHeaderAtIndex(index: Int) -> SZIndexPath
+    {
+        var iPath = SZIndexPath()
+        iPath.columnIndex = index
+        iPath.rowIndex = -1
+        return iPath
+    }
+
+    class func indexPathOfRowHeaderAtIndex(index: Int) -> SZIndexPath
+    {
+        var iPath = SZIndexPath()
+        iPath.rowIndex = index
+        iPath.columnIndex = -1
+        return iPath
+    }
 }
 

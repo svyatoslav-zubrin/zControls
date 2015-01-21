@@ -14,6 +14,9 @@ import UIKit
     func numberOfRowsInTableView(tableView: SZTableView) -> Int
     func numberOfColumnsInTableView(tableView: SZTableView) -> Int
     func tableView(tableView: SZTableView, cellForItemAtIndexPath indexPath: SZIndexPath) -> SZTableViewCell
+    
+    optional func tableView(tableView: SZTableView, headerForColumnAtIndex columnIndex: Int) -> SZTableViewReusableView
+    optional func tableView(tableView: SZTableView, headerForRowAtIndex rowIndex: Int) -> SZTableViewReusableView
 }
 
 
@@ -27,4 +30,7 @@ import UIKit
 {
     func heightOfRaw(index: Int, ofTableView tableView: SZTableView) -> Float
     func widthOfColumn(index: Int, ofTableView tableView: SZTableView) -> Float
+    
+    optional func widthForRowHeadersOfTableView(tableView: SZTableView) -> Float
+    optional func heightForColumnHeadersOfTableView(tableView: SZTableView) -> Float
 }

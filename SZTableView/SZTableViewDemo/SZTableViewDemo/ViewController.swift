@@ -20,6 +20,12 @@ class ViewController
     let rowsNumber = 15
     let colsNumber = 25
     
+    let columnWidth: Float = 100.0
+    let columnHeaderHeight: Float = 20.0
+    
+    let rowHeight: Float = 70.0
+    let rowHeaderWidth: Float = 50.0
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad()
@@ -27,7 +33,10 @@ class ViewController
         super.viewDidLoad()
         
         let cellNib = UINib(nibName: "SimpleTableCell", bundle: NSBundle.mainBundle())
-        tableView.registerNib(cellNib, forCellWithReuseIdentifier: "SimpleCell")
+        tableView.registerNib(cellNib, forViewWithReuseIdentifier: "SimpleCell")
+        let headerNib = UINib(nibName: "SimpleTableReusableView", bundle: NSBundle.mainBundle())
+        tableView.registerNib(headerNib, forViewWithReuseIdentifier: "SimpleReusableView")
+        
         tableView.directionalLockEnabled = true
         let layout = SZTableViewGridLayout()
         layout.layoutDelegate = self
@@ -58,26 +67,47 @@ class ViewController
 
 extension ViewController
 {
-    func numberOfRowsInTableView(tableView: SZTableView) -> Int {
+    func numberOfRowsInTableView(tableView: SZTableView) -> Int
+    {
         return rowsNumber
     }
     
-    func numberOfColumnsInTableView(tableView: SZTableView) -> Int {
+    func numberOfColumnsInTableView(tableView: SZTableView) -> Int
+    {
         return colsNumber
     }
 
-    func tableView(tableView: SZTableView, cellForItemAtIndexPath indexPath: SZIndexPath) -> SZTableViewCell {
-        let cell = tableView.dequeReusableCellWithIdentifier("SimpleCell")
+    func tableView(tableView: SZTableView,
+        cellForItemAtIndexPath indexPath: SZIndexPath) -> SZTableViewCell
+    {
+        let cell = tableView.dequeReusableViewOfKind(SZReusableViewKind.Cell,
+                                                    withReuseIdentifier: "SimpleCell") as SZTableViewCell
         
         let red     = CGFloat(indexPath.columnIndex) / CGFloat(colsNumber)
         let green   = CGFloat(indexPath.rowIndex) / CGFloat(rowsNumber)
         let blue    = CGFloat(0.3)
         let bgColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
-        cell?.backgroundColor = bgColor
+        cell.backgroundColor = bgColor
         
-        cell?.textLabel.text = "\(indexPath.columnIndex + 1):\(indexPath.rowIndex + 1)"
+        cell.textLabel.text = "\(indexPath.columnIndex + 1):\(indexPath.rowIndex + 1)"
         
-        return cell!
+        return cell
+    }
+    
+    func tableView(tableView: SZTableView,
+        headerForRowAtIndex rowIndex: Int) -> SZTableViewReusableView
+    {
+        let view = tableView.dequeReusableViewOfKind(SZReusableViewKind.RowHeader,
+                                                    withReuseIdentifier: "SimpleReusableView")
+        return view!
+    }
+    
+    func tableView(tableView: SZTableView,
+        headerForColumnAtIndex columnIndex: Int) -> SZTableViewReusableView
+    {
+        let view = tableView.dequeReusableViewOfKind(SZReusableViewKind.RowHeader,
+                                                    withReuseIdentifier: "SimpleReusableView")
+        return view!
     }
 }
 
@@ -85,12 +115,24 @@ extension ViewController
     
 extension ViewController
 {
-    func widthOfColumn(index: Int, ofTableView tableView: SZTableView) -> Float {
-        return 100.0
+    func widthOfColumn(index: Int, ofTableView tableView: SZTableView) -> Float
+    {
+        return columnWidth
     }
     
-    func heightOfRaw(index: Int, ofTableView tableView: SZTableView) -> Float {
-        return 70.0
+    func heightOfRaw(index: Int, ofTableView tableView: SZTableView) -> Float
+    {
+        return rowHeight
+    }
+    
+    func widthForRowHeadersOfTableView(tableView: SZTableView) -> Float
+    {
+        return rowHeaderWidth
+    }
+    
+    func heightForColumnHeadersOfTableView(tableView: SZTableView) -> Float
+    {
+        return columnHeaderHeight
     }
 }
 

@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8D31EF1A1A6E9EE8001404A2 /* SZTableViewReusableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D31EF191A6E9EE8001404A2 /* SZTableViewReusableView.swift */; };
+		8D31EF1C1A6EADEC001404A2 /* SimpleTableReusableView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D31EF1B1A6EADEC001404A2 /* SimpleTableReusableView.xib */; };
+		8D31EF1E1A6EAE43001404A2 /* SimpleTableReusableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D31EF1D1A6EAE43001404A2 /* SimpleTableReusableView.swift */; };
 		8D42122A1A641DFD00E9AC88 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4212291A641DFD00E9AC88 /* AppDelegate.swift */; };
 		8D42122C1A641DFD00E9AC88 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D42122B1A641DFD00E9AC88 /* ViewController.swift */; };
 		8D42122F1A641DFD00E9AC88 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8D42122D1A641DFD00E9AC88 /* Main.storyboard */; };
@@ -35,6 +38,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8D31EF191A6E9EE8001404A2 /* SZTableViewReusableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SZTableViewReusableView.swift; path = TableView/SZTableViewReusableView.swift; sourceTree = "<group>"; };
+		8D31EF1B1A6EADEC001404A2 /* SimpleTableReusableView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SimpleTableReusableView.xib; sourceTree = "<group>"; };
+		8D31EF1D1A6EAE43001404A2 /* SimpleTableReusableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleTableReusableView.swift; sourceTree = "<group>"; };
 		8D4212241A641DFC00E9AC88 /* SZTableViewDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SZTableViewDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D4212281A641DFC00E9AC88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D4212291A641DFD00E9AC88 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -45,7 +51,6 @@
 		8D4212391A641DFD00E9AC88 /* SZTableViewDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SZTableViewDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D42123E1A641DFD00E9AC88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D42123F1A641DFD00E9AC88 /* SZTableViewDemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SZTableViewDemoTests.swift; sourceTree = "<group>"; };
-		8D42124A1A6421B700E9AC88 /* SZTableViewLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SZTableViewLayout.swift; path = TableView/SZTableViewLayout.swift; sourceTree = "<group>"; };
 		8D9FFC991A668C0300D9F97D /* SZTableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SZTableView.swift; path = TableView/SZTableView.swift; sourceTree = "<group>"; };
 		8D9FFC9B1A668D3F00D9F97D /* SZTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SZTableViewCell.swift; path = TableView/SZTableViewCell.swift; sourceTree = "<group>"; };
 		8D9FFC9D1A66B3EA00D9F97D /* SZTableViewGridLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SZTableViewGridLayout.swift; path = TableView/SZTableViewGridLayout.swift; sourceTree = "<group>"; };
@@ -100,8 +105,10 @@
 				8D4212291A641DFD00E9AC88 /* AppDelegate.swift */,
 				8D42122B1A641DFD00E9AC88 /* ViewController.swift */,
 				8D9FFCA31A66D43300D9F97D /* SimpleTableCell.swift */,
-				8D42122D1A641DFD00E9AC88 /* Main.storyboard */,
 				8D9FFCA51A66D47D00D9F97D /* SimpleTableCell.xib */,
+				8D31EF1D1A6EAE43001404A2 /* SimpleTableReusableView.swift */,
+				8D31EF1B1A6EADEC001404A2 /* SimpleTableReusableView.xib */,
+				8D42122D1A641DFD00E9AC88 /* Main.storyboard */,
 				8D4212301A641DFD00E9AC88 /* Images.xcassets */,
 				8D4212321A641DFD00E9AC88 /* LaunchScreen.xib */,
 				8D4212271A641DFC00E9AC88 /* Supporting Files */,
@@ -139,8 +146,8 @@
 			children = (
 				8D9FFC991A668C0300D9F97D /* SZTableView.swift */,
 				8D9FFC9B1A668D3F00D9F97D /* SZTableViewCell.swift */,
+				8D31EF191A6E9EE8001404A2 /* SZTableViewReusableView.swift */,
 				8D9FFC9D1A66B3EA00D9F97D /* SZTableViewGridLayout.swift */,
-				8D42124A1A6421B700E9AC88 /* SZTableViewLayout.swift */,
 				8DD3B9491A653CB800068B61 /* SZIndexPath.swift */,
 				8DD3B94B1A65463900068B61 /* SZTableViewLayoutAttributes.swift */,
 				8D9FFC9F1A66B5F100D9F97D /* SZTableViewProtocols.swift */,
@@ -231,6 +238,7 @@
 			files = (
 				8D42122F1A641DFD00E9AC88 /* Main.storyboard in Resources */,
 				8D4212341A641DFD00E9AC88 /* LaunchScreen.xib in Resources */,
+				8D31EF1C1A6EADEC001404A2 /* SimpleTableReusableView.xib in Resources */,
 				8D9FFCA61A66D47D00D9F97D /* SimpleTableCell.xib in Resources */,
 				8D4212311A641DFD00E9AC88 /* Images.xcassets in Resources */,
 			);
@@ -256,7 +264,9 @@
 				8D42122A1A641DFD00E9AC88 /* AppDelegate.swift in Sources */,
 				8D9FFCA21A66BD3F00D9F97D /* SZTableViewCommon.swift in Sources */,
 				8D9FFC9E1A66B3EA00D9F97D /* SZTableViewGridLayout.swift in Sources */,
+				8D31EF1A1A6E9EE8001404A2 /* SZTableViewReusableView.swift in Sources */,
 				8D9FFCA41A66D43300D9F97D /* SimpleTableCell.swift in Sources */,
+				8D31EF1E1A6EAE43001404A2 /* SimpleTableReusableView.swift in Sources */,
 				8DD3B94A1A653CB800068B61 /* SZIndexPath.swift in Sources */,
 				8D9FFC9C1A668D3F00D9F97D /* SZTableViewCell.swift in Sources */,
 				8D9FFC9A1A668C0300D9F97D /* SZTableView.swift in Sources */,
