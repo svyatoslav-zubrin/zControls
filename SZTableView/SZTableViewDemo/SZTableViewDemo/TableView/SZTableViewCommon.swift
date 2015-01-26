@@ -8,12 +8,21 @@
 
 import Foundation
 
-enum SZReusableViewKind {
+enum SZReusableViewKind
+{
+    case Undefined
     case Cell
     case ColumnHeader
     case RowHeader
     case ColumnsSectionHeader
     case RowsSectionHeader
+}
+
+enum SZReusableViewsZOrder: Int
+{
+    case Undefined = 0
+    case Cell = -1
+    case RowAndColumnHeader = 50
 }
 
 typealias SZBorderIndexes = (column: (minIndex: Int, maxIndex: Int), row: (minIndex: Int, maxIndex: Int))

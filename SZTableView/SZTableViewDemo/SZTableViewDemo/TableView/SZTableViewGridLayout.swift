@@ -36,67 +36,81 @@ class SZTableViewGridLayout: NSObject
     
     func prepareLayout()
     {
-        var newLayoutInfo = LayoutInfo()
-        
-        let rowsCount = tableView.tableDataSource.numberOfRowsInTableView(tableView)
-        let columnsCount = tableView.tableDataSource.numberOfColumnsInTableView(tableView)
+        layoutInfo = LayoutInfo()
 
-        // headers
+        prepareLayoutAttributesForRowHeaders()
+        prepareLayoutAttributesForColumnHeaders()
+        prepareLayoutAttributesForCells()
+
+        self.tableView.contentSize = calculateContentSize()
+    }
+
+    private func prepareLayoutAttributesForRowHeaders()
+    {
+        let rowsCount = tableView.tableDataSource.numberOfRowsInTableView(tableView)
+
         if isRowHeadersNeeded() && rowsCount > 0 {
-            
+
             var rowHeadersLayoutAttributes = LayoutAttributes()
-            
+
             for rowIndex in 0 ..< rowsCount {
                 let indexPath = SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex)
                 let viewAttributes = SZTableViewLayoutAttributes(forReusableViewOfKind: SZReusableViewKind.RowHeader,
-                                                                 atIndexPath: indexPath)
+                        atIndexPath: indexPath)
                 viewAttributes.frame = calculateFrameForReusableViewOfKind(SZReusableViewKind.RowHeader,
-                                                                           atIndexPath: indexPath)
+                        atIndexPath: indexPath)
                 rowHeadersLayoutAttributes[indexPath] = viewAttributes
             }
-            
-            newLayoutInfo[SZReusableViewKind.RowHeader] = rowHeadersLayoutAttributes
+
+            layoutInfo[SZReusableViewKind.RowHeader] = rowHeadersLayoutAttributes
         }
+    }
+
+    private func prepareLayoutAttributesForColumnHeaders()
+    {
+        let columnsCount = tableView.tableDataSource.numberOfColumnsInTableView(tableView)
+
         if isColumnHeadersNeeded() && columnsCount > 0 {
-            
+
             var columnHeadersLayoutAttributes = LayoutAttributes()
 
             for columnIndex in 0 ..< columnsCount {
                 let indexPath = SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex)
                 let viewAttributes = SZTableViewLayoutAttributes(forReusableViewOfKind: SZReusableViewKind.ColumnHeader,
-                                                                 atIndexPath: indexPath)
+                        atIndexPath: indexPath)
                 viewAttributes.frame = calculateFrameForReusableViewOfKind(SZReusableViewKind.ColumnHeader,
-                                                                           atIndexPath: indexPath)
+                        atIndexPath: indexPath)
                 columnHeadersLayoutAttributes[indexPath] = viewAttributes
             }
-            
-            newLayoutInfo[SZReusableViewKind.ColumnHeader] = columnHeadersLayoutAttributes
+
+            layoutInfo[SZReusableViewKind.ColumnHeader] = columnHeadersLayoutAttributes
         }
-        
-        // cells
+    }
+
+    private func prepareLayoutAttributesForCells()
+    {
+        let rowsCount = tableView.tableDataSource.numberOfRowsInTableView(tableView)
+        let columnsCount = tableView.tableDataSource.numberOfColumnsInTableView(tableView)
         let tableHasContent = columnsCount > 0 && rowsCount > 0
+
         if tableHasContent {
-            
+
             var cellsLayoutAttributes = LayoutAttributes()
 
             for rowIndex in 0 ..< rowsCount {
                 for columnIndex in 0..<columnsCount {
                     let indexPath = SZIndexPath(rowSectionIndex: 0,
-                                                columnSectionIndex: 0,
-                                                rowIndex: rowIndex,
-                                                columnIndex: columnIndex)
+                            columnSectionIndex: 0,
+                            rowIndex: rowIndex,
+                            columnIndex: columnIndex)
                     let cellAttributes = SZTableViewLayoutAttributes(forCellWithIndexPath: indexPath)
                     cellAttributes.frame = calculateFrameForCellAtIndexPath(indexPath)
                     cellsLayoutAttributes[indexPath] = cellAttributes
                 }
             }
 
-            newLayoutInfo[SZReusableViewKind.Cell] = cellsLayoutAttributes
+            layoutInfo[SZReusableViewKind.Cell] = cellsLayoutAttributes
         }
-        
-        layoutInfo = newLayoutInfo
-        
-        self.tableView.contentSize = calculateContentSize()
     }
 
     func frameForReusableViewOfKind(kind: SZReusableViewKind, atIndexPath indexPath: SZIndexPath) -> CGRect
@@ -111,7 +125,7 @@ class SZTableViewGridLayout: NSObject
 
     // MARK: - Helpers
 
-    func cellsVisibleBorderIndexes() -> SZBorderIndexes
+    func cellsVisibleBorderIndexes() -> SZBorderIndexes?
     {
         var indexPathsOfVisibleCells = [SZIndexPath]()
 
@@ -145,6 +159,14 @@ class SZTableViewGridLayout: NSObject
                 width: tableView.bounds.width,
                 height: tableView.bounds.height)
 
+        if kind == SZReusableViewKind.RowHeader && tableView.rowHeadersAlwaysVisible {
+            prepareLayoutAttributesForRowHeaders()
+        }
+
+        if kind == SZReusableViewKind.ColumnHeader && tableView.columnHeadersAlwaysVisible {
+            prepareLayoutAttributesForColumnHeaders()
+        }
+
         if let headersLayoutAttributes = layoutInfo[kind] as LayoutAttributes? {
             for (indexPath, attributes) in headersLayoutAttributes {
                 if (CGRectIntersectsRect(visibleScrollRect, attributes.frame)) {
@@ -153,12 +175,16 @@ class SZTableViewGridLayout: NSObject
             }
         }
 
-        let maxColumnIndex = maxElement(indexPathsOfVisibleHeaders.map{$0.columnIndex})
-        let minColumnIndex = minElement(indexPathsOfVisibleHeaders.map{$0.columnIndex})
-        let maxRawIndex    = maxElement(indexPathsOfVisibleHeaders.map{$0.rowIndex})
-        let minRawIndex    = minElement(indexPathsOfVisibleHeaders.map{$0.rowIndex})
-
-        return ((minColumnIndex, maxColumnIndex), (minRawIndex, maxRawIndex))
+        if indexPathsOfVisibleHeaders.count != 0 {
+            let maxColumnIndex = maxElement(indexPathsOfVisibleHeaders.map{$0.columnIndex})
+            let minColumnIndex = minElement(indexPathsOfVisibleHeaders.map{$0.columnIndex})
+            let maxRawIndex    = maxElement(indexPathsOfVisibleHeaders.map{$0.rowIndex})
+            let minRawIndex    = minElement(indexPathsOfVisibleHeaders.map{$0.rowIndex})
+            return ((minColumnIndex, maxColumnIndex), (minRawIndex, maxRawIndex))
+        }
+        else {
+            return nil
+        }
     }
     
     // MARK: - Private
@@ -209,7 +235,10 @@ class SZTableViewGridLayout: NSObject
         
         if let headerWidth = layoutDelegate.widthForRowHeadersOfTableView?(tableView) {
             let rowHeight = layoutDelegate.heightOfRaw(indexPath.rowIndex, ofTableView: tableView)
-            
+
+            var originX: Float = tableView.rowHeadersAlwaysVisible
+                                    ? Float(tableView.contentOffset.x)
+                                    : 0.0
             var originY: Float = layoutDelegate.heightForColumnHeadersOfTableView?(tableView) != nil
                                     ? layoutDelegate.heightForColumnHeadersOfTableView!(tableView) + interRawSpacing
                                     : 0.0
@@ -218,7 +247,7 @@ class SZTableViewGridLayout: NSObject
                 originY += layoutDelegate.heightOfRaw(rowIndex, ofTableView: tableView) + interRawSpacing
             }
             
-            frame = CGRect(x: CGFloat(0.0),
+            frame = CGRect(x: CGFloat(originX),
                            y: CGFloat(originY),
                            width: CGFloat(headerWidth),
                            height: CGFloat(rowHeight))
@@ -237,12 +266,16 @@ class SZTableViewGridLayout: NSObject
             var originX: Float = layoutDelegate.widthForRowHeadersOfTableView?(tableView) != nil
                                     ? layoutDelegate.widthForRowHeadersOfTableView!(tableView) + interColumnSpacing
                                     : 0.0
+            var originY: Float = tableView.columnHeadersAlwaysVisible
+                                    ? Float(tableView.contentOffset.y)
+                                    : 0.0
+
             for columnIndex in 0 ..< indexPath.columnIndex {
                 originX += layoutDelegate.widthOfColumn(columnIndex, ofTableView: tableView) + interColumnSpacing
             }
             
             frame = CGRect(x: CGFloat(originX),
-                           y: CGFloat(0.0),
+                           y: CGFloat(originY),
                            width: CGFloat(columnWidth),
                            height: CGFloat(headerHeight))
         }

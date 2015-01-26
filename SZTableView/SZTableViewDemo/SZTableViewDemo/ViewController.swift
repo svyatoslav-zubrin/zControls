@@ -34,10 +34,13 @@ class ViewController
         
         let cellNib = UINib(nibName: "SimpleTableCell", bundle: NSBundle.mainBundle())
         tableView.registerNib(cellNib, forViewWithReuseIdentifier: "SimpleCell")
-        let headerNib = UINib(nibName: "SimpleTableReusableView", bundle: NSBundle.mainBundle())
+        let headerNib = UINib(nibName: "SimpleTableCell"/*"SimpleTableReusableView"*/, bundle: NSBundle.mainBundle())
         tableView.registerNib(headerNib, forViewWithReuseIdentifier: "SimpleReusableView")
         
         tableView.directionalLockEnabled = true
+        tableView.rowHeadersAlwaysVisible = true
+        tableView.columnHeadersAlwaysVisible = true
+
         let layout = SZTableViewGridLayout()
         layout.layoutDelegate = self
         layout.interColumnSpacing = 10
@@ -89,7 +92,8 @@ extension ViewController
         let bgColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
         cell.backgroundColor = bgColor
         
-        cell.textLabel.text = "\(indexPath.columnIndex + 1):\(indexPath.rowIndex + 1)"
+        cell.textLabel.text = "c\(indexPath.columnIndex):r\(indexPath.rowIndex)"
+        cell.textLabel.textColor = UIColor.magentaColor()
         
         return cell
     }
@@ -98,7 +102,9 @@ extension ViewController
         headerForRowAtIndex rowIndex: Int) -> SZTableViewReusableView
     {
         let view = tableView.dequeReusableViewOfKind(SZReusableViewKind.RowHeader,
-                                                    withReuseIdentifier: "SimpleReusableView")
+                                                    withReuseIdentifier: "SimpleReusableView") as SZTableViewCell?
+        view!.textLabel.text = "\(rowIndex)"
+
         return view!
     }
     
@@ -106,7 +112,9 @@ extension ViewController
         headerForColumnAtIndex columnIndex: Int) -> SZTableViewReusableView
     {
         let view = tableView.dequeReusableViewOfKind(SZReusableViewKind.RowHeader,
-                                                    withReuseIdentifier: "SimpleReusableView")
+                                                    withReuseIdentifier: "SimpleReusableView") as SZTableViewCell?
+        view!.textLabel.text = "\(columnIndex)"
+
         return view!
     }
 }

@@ -24,21 +24,28 @@ class SZTableView
     @IBOutlet weak var tableDataSource: SZTableViewDataSource!
     @IBOutlet weak var tableDelegate: SZTableViewDelegate!
 
-    var reusePool = [String: SZTableViewReusableView]()
-    var cellsOnView = [SZIndexPath: SZTableViewCell]()
-    var headersOnView = [SZIndexPath: SZTableViewReusableView]()
-    
-    var previousScrollPosition: CGPoint = CGPoint.zeroPoint
-    var scrollDirection: SZTableViewScrollDirection = (SZScrollDirection.Unknown, SZScrollDirection.Unknown)
-
-    var registeredViewNibs = [String: UINib]()
-    var registeredViewClasses = [String: AnyClass]()
-
     var gridLayout: SZTableViewGridLayout!
 
-    var cellsBorderIndexes: SZBorderIndexes! = nil
-    var rowHeadersBorderIndexes: SZBorderIndexes? = nil
-    var columnHeadersBorderIndexes: SZBorderIndexes? = nil
+    // MARK: Public properties
+
+    var rowHeadersAlwaysVisible = false
+    var columnHeadersAlwaysVisible = false
+
+    // MARK: Private properties
+
+    private var reusePool = [String: SZTableViewReusableView]()
+    private var cellsOnView = [SZIndexPath: SZTableViewCell]()
+    private var headersOnView = [SZIndexPath: SZTableViewReusableView]()
+
+    private var previousScrollPosition: CGPoint = CGPoint.zeroPoint
+    private var scrollDirection: SZTableViewScrollDirection = (SZScrollDirection.Unknown, SZScrollDirection.Unknown)
+
+    private var registeredViewNibs = [String: UINib]()
+    private var registeredViewClasses = [String: AnyClass]()
+
+    private var cellsBorderIndexes: SZBorderIndexes! = nil
+    private var rowHeadersBorderIndexes: SZBorderIndexes? = nil
+    private var columnHeadersBorderIndexes: SZBorderIndexes? = nil
 
     // MARK: - Lifecycle
 
@@ -226,13 +233,21 @@ class SZTableView
         self.addSubview(header)
         headersOnView[indexPath] = header
     }
-    
+
     private func removeHeaderAtIndexPath(indexPath: SZIndexPath)
     {
         if let header = headersOnView[indexPath] {
             header.removeFromSuperview()
             headersOnView[indexPath] = nil
             reusePool[header.reuseIdentifier!] = header
+        }
+    }
+
+    private func repositionHeaderOfKind(kind: SZReusableViewKind, atIndexPath indexPath: SZIndexPath)
+    {
+        if let header = headersOnView[indexPath] as SZTableViewReusableView? {
+            header.frame = gridLayout.frameForReusableViewOfKind(kind, atIndexPath: indexPath)
+            header.setNeedsLayout()
         }
     }
 }
@@ -245,6 +260,7 @@ extension SZTableView: UIScrollViewDelegate
     {
         case Place
         case Remove
+        case Reposition
     }
     
     func scrollViewDidScroll(scrollView: UIScrollView)
@@ -252,46 +268,74 @@ extension SZTableView: UIScrollViewDelegate
         getScrollDirection()
 
         // column headers
-        let newColumnHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(SZReusableViewKind.ColumnHeader)
-        let columnHedearsToRemove = findHeadersOfKind(SZReusableViewKind.ColumnHeader,
-                                                     forOperation: .Remove,
-                                                     andNewBorderIndexes: newColumnHeadersBorderIndexes!)
-        for indexPath in columnHedearsToRemove {
-            removeHeaderAtIndexPath(indexPath)
+        if let newColumnHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(SZReusableViewKind.ColumnHeader) as SZBorderIndexes? {
+            // remove
+            let columnHedearsToRemove = findHeadersOfKind(SZReusableViewKind.ColumnHeader,
+                                                         forOperation: .Remove,
+                                                         andNewBorderIndexes: newColumnHeadersBorderIndexes)
+            for indexPath in columnHedearsToRemove {
+                removeHeaderAtIndexPath(indexPath)
+            }
+            // place
+            let columnHeadersToPlace = findHeadersOfKind(SZReusableViewKind.ColumnHeader,
+                    forOperation: .Place,
+                    andNewBorderIndexes: newColumnHeadersBorderIndexes)
+            for indexPath in columnHeadersToPlace {
+                placeHeaderOfKind(SZReusableViewKind.ColumnHeader, atIndexPath: indexPath)
+            }
+            // reposition
+            let columnHeadersToReposition = findHeadersOfKind(SZReusableViewKind.ColumnHeader,
+                    forOperation: .Reposition,
+                    andNewBorderIndexes: newColumnHeadersBorderIndexes)
+            for indexPath in columnHeadersToReposition {
+                repositionHeaderOfKind(SZReusableViewKind.ColumnHeader, atIndexPath: indexPath)
+            }
+
+            columnHeadersBorderIndexes = newColumnHeadersBorderIndexes
         }
-        let columnHeadersToPlace = findHeadersOfKind(SZReusableViewKind.ColumnHeader,
-                forOperation: .Place,
-                andNewBorderIndexes: newColumnHeadersBorderIndexes!)
-        for indexPath in columnHeadersToPlace {
-            placeHeaderOfKind(SZReusableViewKind.ColumnHeader, atIndexPath: indexPath)
+        else {
+            columnHeadersBorderIndexes = nil
         }
-        columnHeadersBorderIndexes = newColumnHeadersBorderIndexes
 
         // row headers
-        let newRowHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(SZReusableViewKind.RowHeader)
-        let rowHeadersToRemove = findHeadersOfKind(SZReusableViewKind.RowHeader,
-                forOperation: .Remove,
-                andNewBorderIndexes: newRowHeadersBorderIndexes!)
-        for indexPath in rowHeadersToRemove {
-            removeHeaderAtIndexPath(indexPath)
+        if let newRowHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(SZReusableViewKind.RowHeader) as SZBorderIndexes? {
+            // remove
+            let rowHeadersToRemove = findHeadersOfKind(SZReusableViewKind.RowHeader,
+                    forOperation: .Remove,
+                    andNewBorderIndexes: newRowHeadersBorderIndexes)
+            for indexPath in rowHeadersToRemove {
+                removeHeaderAtIndexPath(indexPath)
+            }
+            // place
+            let rowHeadersToPlace = findHeadersOfKind(SZReusableViewKind.RowHeader,
+                    forOperation: .Place,
+                    andNewBorderIndexes: newRowHeadersBorderIndexes)
+            for indexPath in rowHeadersToPlace {
+                placeHeaderOfKind(SZReusableViewKind.RowHeader, atIndexPath: indexPath)
+            }
+            // reposition
+            let rowHeadersToReposition = findHeadersOfKind(SZReusableViewKind.RowHeader,
+                    forOperation: .Reposition,
+                    andNewBorderIndexes: newRowHeadersBorderIndexes)
+            for indexPath in rowHeadersToReposition {
+                repositionHeaderOfKind(SZReusableViewKind.RowHeader, atIndexPath: indexPath)
+            }
+
+            rowHeadersBorderIndexes = newRowHeadersBorderIndexes
         }
-        let rowHeadersToPlace = findHeadersOfKind(SZReusableViewKind.RowHeader,
-                forOperation: .Place,
-                andNewBorderIndexes: newRowHeadersBorderIndexes!)
-        for indexPath in rowHeadersToPlace {
-            placeHeaderOfKind(SZReusableViewKind.RowHeader, atIndexPath: indexPath)
+        else {
+            rowHeadersBorderIndexes = nil
         }
-        rowHeadersBorderIndexes = newRowHeadersBorderIndexes
 
         // cells
         let newCellsBorderIndexes = gridLayout.cellsVisibleBorderIndexes()
 
-        let cellIndexesToRemove = findCellsForOperation(.Remove, andNewBorderIndexes: newCellsBorderIndexes)
+        let cellIndexesToRemove = findCellsForOperation(.Remove, andNewBorderIndexes: newCellsBorderIndexes!)
         for indexPath in cellIndexesToRemove {
             removeCellWithIndexPath(indexPath)
         }
         
-        let cellIndexesToPlace = findCellsForOperation(.Place, andNewBorderIndexes: newCellsBorderIndexes)
+        let cellIndexesToPlace = findCellsForOperation(.Place, andNewBorderIndexes: newCellsBorderIndexes!)
         for indexPath in cellIndexesToPlace {
             placeCellWithIndexPath(indexPath)
         }
@@ -357,94 +401,123 @@ extension SZTableView: UIScrollViewDelegate
         var indexes = [SZIndexPath]()
 
         // columns
-        let newHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(kind)
-        let isColumns = kind == SZReusableViewKind.ColumnHeader
-        let borderIndexes = isColumns ? columnHeadersBorderIndexes : rowHeadersBorderIndexes
-        if isColumns { // column headers
-            if scrollDirection.horizontal == .FromMinToMax {
-                if operation == .Remove {
-                    let minIndex = columnHeadersBorderIndexes!.column.minIndex
-                    let maxIndex = newHeadersBorderIndexes!.column.minIndex
-                    if minIndex < maxIndex {
-                        for columnIndex in minIndex ... maxIndex {
-                            indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+        if let newHeadersBorderIndexes = gridLayout.headersVisibleBorderIndexesForHeaderKind(kind) as SZBorderIndexes? {
+            let isColumns = kind == SZReusableViewKind.ColumnHeader
+            let oldBorderIndexes = isColumns ? columnHeadersBorderIndexes : rowHeadersBorderIndexes
+            if isColumns { // column headers
+                if scrollDirection.horizontal == .FromMinToMax {
+                    if operation == .Remove  && oldBorderIndexes != nil {
+                        let minIndex = oldBorderIndexes!.column.minIndex
+                        let maxIndex = newHeadersBorderIndexes.column.minIndex - 1
+                        if minIndex < maxIndex {
+                            for columnIndex in minIndex ... maxIndex {
+                                indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+                            }
+                            if indexes.count > 0 {
+                                println("indexes: \(indexes)")
+                            }
                         }
                     }
-                }
-                else {
-                    let minIndex = columnHeadersBorderIndexes!.column.maxIndex
-                    let maxIndex = newHeadersBorderIndexes!.column.maxIndex + 1
-                    if minIndex < maxIndex {
-                        for columnIndex in minIndex ... maxIndex {
-                            indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+                    else if operation == .Place {
+                        let minIndex = oldBorderIndexes != nil ? oldBorderIndexes!.column.maxIndex : newHeadersBorderIndexes.column.minIndex
+                        let maxIndex = newHeadersBorderIndexes.column.maxIndex + 1
+                        if minIndex < maxIndex {
+                            for columnIndex in minIndex ... maxIndex {
+                                indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+                            }
                         }
+                    }
+                    else if operation == .Reposition {
+                        // there is no need in repositioning for column headers in case of horizontal scrolling
+                    }
+                }
+                else if scrollDirection.horizontal == .FromMaxToMin {
+                    if operation == .Remove  && oldBorderIndexes != nil {
+                        let minIndex = oldBorderIndexes!.column.maxIndex
+                        let maxIndex = newHeadersBorderIndexes.column.maxIndex
+                        if minIndex < maxIndex {
+                            for columnIndex in minIndex ... maxIndex {
+                                indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+                            }
+                        }
+                    }
+                    else if operation == .Place {
+                        let minIndex = newHeadersBorderIndexes.column.minIndex + 1
+                        let maxIndex = oldBorderIndexes != nil ? oldBorderIndexes!.column.minIndex : newHeadersBorderIndexes.column.maxIndex
+                        if minIndex < maxIndex {
+                            for columnIndex in minIndex ... maxIndex {
+                                indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+                            }
+                        }
+                    }
+                    else if operation == .Reposition {
+                        // there is no need in repositioning for column headers in case of horizontal scrolling
+                    }
+                }
+                else if scrollDirection.vertical != .Unknown
+                        && operation == .Reposition
+                        && columnHeadersAlwaysVisible == true
+                        && oldBorderIndexes != nil {
+                    for columnIndex in oldBorderIndexes!.column.minIndex ... oldBorderIndexes!.column.maxIndex {
+                        indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
                     }
                 }
             }
-            else if scrollDirection.horizontal == .FromMaxToMin {
-                if operation == .Remove {
-                    let minIndex = columnHeadersBorderIndexes!.column.maxIndex
-                    let maxIndex = newHeadersBorderIndexes!.column.maxIndex
-                    if minIndex < maxIndex {
-                        for columnIndex in minIndex ... maxIndex {
-                            indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+            else { // isColumn != true
+                // row headers
+                if scrollDirection.vertical == .FromMinToMax {
+                    if operation == .Remove && oldBorderIndexes != nil {
+                        let minIndex = oldBorderIndexes!.row.minIndex
+                        let maxIndex = newHeadersBorderIndexes.row.minIndex - 1
+                        if minIndex < maxIndex {
+                            for rowIndex in minIndex ... maxIndex {
+                                indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
+                            }
                         }
+                    } else if operation == .Place {
+                        let minIndex = oldBorderIndexes != nil ? oldBorderIndexes!.row.maxIndex : newHeadersBorderIndexes.row.minIndex
+                        let maxIndex = newHeadersBorderIndexes.row.maxIndex + 1
+                        if minIndex < maxIndex {
+                            for rowIndex in minIndex ... maxIndex {
+                                indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
+                            }
+                        }
+                    } else if operation == .Reposition {
+                        // there is no need in repositioning for row headers in case of vertical scrolling
                     }
-                }
-                else {
-                    let minIndex = columnHeadersBorderIndexes!.column.minIndex
-                    let maxIndex = newHeadersBorderIndexes!.column.minIndex + 1
-                    if minIndex < maxIndex {
-                        for columnIndex in minIndex ... maxIndex {
-                            indexes.append(SZIndexPath.indexPathOfColumnHeaderAtIndex(columnIndex))
+                } else if scrollDirection.vertical == .FromMaxToMin {
+                    if operation == .Remove && oldBorderIndexes != nil {
+                        let maxIndex = oldBorderIndexes!.row.maxIndex
+                        let minIndex = newHeadersBorderIndexes.row.maxIndex + 1
+                        if minIndex < maxIndex {
+                            for rowIndex in minIndex ... maxIndex {
+                                indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
+                            }
                         }
+                    } else if operation == .Place {
+                        let maxIndex = newHeadersBorderIndexes.row.minIndex + 1
+                        let minIndex = oldBorderIndexes != nil ? oldBorderIndexes!.row.minIndex : newHeadersBorderIndexes.row.maxIndex
+                        if minIndex < maxIndex {
+                            for rowIndex in minIndex ... maxIndex {
+                                indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
+                            }
+                        }
+                    } else if operation == .Reposition {
+                        // there is no need in repositioning for row headers in case of vertical scrolling
+                    }
+                } else if scrollDirection.horizontal != .Unknown
+                        && operation == .Reposition
+                        && rowHeadersAlwaysVisible == true
+                        && oldBorderIndexes != nil {
+                    for rowIndex in oldBorderIndexes!.row.minIndex ... oldBorderIndexes!.row.maxIndex {
+                        indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
                     }
                 }
             }
         }
-        else { // row headers
-            if scrollDirection.vertical == .FromMinToMax {
-                if operation == .Remove {
-                    let minIndex = rowHeadersBorderIndexes!.row.minIndex
-                    let maxIndex = newHeadersBorderIndexes!.row.minIndex
-                    if minIndex < maxIndex {
-                        for rowIndex in minIndex ... maxIndex {
-                            indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
-                        }
-                    }
-                }
-                else {
-                    let minIndex = rowHeadersBorderIndexes!.row.maxIndex
-                    let maxIndex = newHeadersBorderIndexes!.row.maxIndex + 1
-                    if minIndex < maxIndex {
-                        for rowIndex in minIndex ... maxIndex {
-                            indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
-                        }
-                    }
-                }
-            }
-            else if scrollDirection.vertical == .FromMaxToMin {
-                if operation == .Remove {
-                    let minIndex = rowHeadersBorderIndexes!.row.maxIndex
-                    let maxIndex = newHeadersBorderIndexes!.row.maxIndex
-                    if minIndex < maxIndex {
-                        for rowIndex in minIndex ... maxIndex {
-                            indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
-                        }
-                    }
-                }
-                else {
-                    let minIndex = rowHeadersBorderIndexes!.row.minIndex
-                    let maxIndex = newHeadersBorderIndexes!.row.minIndex + 1
-                    if minIndex < maxIndex {
-                        for rowIndex in minIndex ... maxIndex {
-                            indexes.append(SZIndexPath.indexPathOfRowHeaderAtIndex(rowIndex))
-                        }
-                    }
-                }
-            }
+        else {
+            println("no new headers of kind: " + ((kind == SZReusableViewKind.ColumnHeader) ? ".ColumnHeader" : ".RowHeader"))
         }
-
 
         return indexes
     }
